@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Plano alimentar de 1.400 kcal: Dia A e Dia B alternados, domingo livre, marmitas, compras e trocas.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Plano 1.400">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F2F4F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101411" media="(prefers-color-scheme: dark)">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Plano Alimentar 1.400</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Caveat:wght@700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  /* Layout: coluna única de app (até 760px) com cabeçalho fixo; abas no topo no computador e embaixo no celular.
+     Cores: Dia A = abóbora, Dia B = vagem, Livre = lavanda; marmitas levam etiqueta de fita crepe. */
+  --bg:#F2F4F0; --surface:#FFFFFF; --surface-2:#E9EDE6; --ink:#17201A; --ink-2:#55605A; --line:#D6DCD3;
+  --a:#B4560E; --a-soft:#FBEADB; --b:#12706A; --b-soft:#DBEFEA; --free:#5E4E9E; --free-soft:#ECE8F7;
+  --water:#2A74A6; --danger:#A3352B; --danger-soft:#F8E4E1;
+  --tape:#EFE5C5; --tape-ink:#4A3E1B;
+  --shadow:0 1px 2px rgba(23,32,26,.05),0 8px 20px -12px rgba(23,32,26,.18);
+  --f-display:"Bricolage Grotesque","Inter",system-ui,sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-hand:"Caveat","Segoe Print","Bradley Hand",cursive;
+  --day:var(--a); --day-soft:var(--a-soft);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101411; --surface:#181D19; --surface-2:#232A25; --ink:#E5EBE5; --ink-2:#A0ACA4; --line:#2E3631;
+    --a:#F09A55; --a-soft:#3A2517; --b:#5CC3B3; --b-soft:#11302B; --free:#ADA0EA; --free-soft:#25203C;
+    --water:#6CB5E4; --danger:#F08A7E; --danger-soft:#3B1D1A;
+    --tape:#4A4330; --tape-ink:#F2E8C8;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 20px -12px rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101411; --surface:#181D19; --surface-2:#232A25; --ink:#E5EBE5; --ink-2:#A0ACA4; --line:#2E3631;
+  --a:#F09A55; --a-soft:#3A2517; --b:#5CC3B3; --b-soft:#11302B; --free:#ADA0EA; --free-soft:#25203C;
+  --water:#6CB5E4; --danger:#F08A7E; --danger-soft:#3B1D1A;
+  --tape:#4A4330; --tape-ink:#F2E8C8;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 20px -12px rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+[data-dia="A"]{ --day:var(--a); --day-soft:var(--a-soft); }
+[data-dia="B"]{ --day:var(--b); --day-soft:var(--b-soft); }
+[data-dia="L"]{ --day:var(--free); --day-soft:var(--free-soft); }
+
+*,*::before,*::after{ box-sizing:border-box; }
+body{ background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+body::before{ content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px); z-index:30; background:var(--bg); }
+button{ font:inherit; color:inherit; }
+a{ color:inherit; }
+:focus-visible{ outline:2px solid var(--day); outline-offset:2px; border-radius:6px; }
+.wrap{ width:100%; max-width:760px; margin-inline:auto; padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px)); }
+
+/* Cabeçalho e abas */
+.top{ position:sticky; top:env(safe-area-inset-top,0px); z-index:20; background:var(--bg); border-bottom:1px solid var(--line); }
+.top-in{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding-block:12px; }
+.brand{ display:flex; align-items:center; gap:12px; min-width:0; }
+.scale{ flex:0 0 auto; font-family:var(--f-display); font-weight:800; font-size:15px; line-height:1; padding:8px 9px 7px; border-radius:9px; background:var(--ink); color:var(--bg); font-variant-numeric:tabular-nums; letter-spacing:.01em; }
+.scale small{ font-size:10px; font-weight:600; margin-left:3px; opacity:.75; }
+.brand-t{ min-width:0; }
+.brand h1{ margin:0; font-family:var(--f-display); font-size:18px; font-weight:800; line-height:1.15; letter-spacing:-.01em; }
+.brand p{ margin:0; font-size:13px; color:var(--ink-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.badge{ flex:0 0 auto; font-weight:700; font-size:13px; padding:6px 11px; border-radius:999px; background:var(--day-soft); color:var(--day); white-space:nowrap; }
+.tabs{ display:flex; gap:2px; }
+.tab{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 2px 6px; border-radius:11px; color:var(--ink-2); text-decoration:none; font-size:11.5px; font-weight:600; }
+.tab svg{ width:22px; height:22px; flex:0 0 auto; }
+.tab[aria-current="page"]{ color:var(--ink); background:var(--surface-2); }
+@media (min-width:720px){
+  .tabs-wrap{ border-top:1px solid var(--line); }
+  .tabs{ padding-block:6px; gap:4px; }
+  .tab{ flex:0 0 auto; flex-direction:row; gap:8px; padding:8px 14px; font-size:14px; }
+  .tab svg{ width:18px; height:18px; }
+}
+@media (max-width:719px){
+  .tabs-wrap{ position:fixed; left:0; right:0; bottom:0; z-index:25; background:var(--surface); border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom,0px); }
+  .tabs{ padding-block:6px; }
+  main{ padding-bottom:calc(92px + env(safe-area-inset-bottom,0px)) !important; }
+}
+
+/* Estrutura */
+main{ padding-block:18px 48px; }
+.view{ display:flex; flex-direction:column; gap:14px; }
+.block{ display:flex; flex-direction:column; gap:10px; }
+.card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+.eyebrow{ margin:0; font-size:12px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-2); }
+.h2{ margin:0; font-family:var(--f-display); font-weight:800; font-size:27px; line-height:1.08; letter-spacing:-.02em; text-wrap:balance; }
+.h3{ margin:0; font-family:var(--f-display); font-weight:700; font-size:18px; line-height:1.2; letter-spacing:-.01em; text-wrap:balance; }
+.lead{ margin:0; color:var(--ink-2); max-width:62ch; }
+.sec{ margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+.bul{ margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; }
+.bul li::marker{ color:var(--ink-2); }
+.hint{ margin:0; font-size:12.5px; color:var(--ink-2); }
+.link{ border:0; background:none; padding:0; font-weight:600; text-decoration:underline; text-decoration-color:var(--day); text-decoration-thickness:2px; text-underline-offset:3px; cursor:pointer; }
+.btns{ display:flex; gap:8px; flex-wrap:wrap; }
+.btn{ border:1px solid var(--ink); border-radius:10px; padding:9px 14px; min-height:42px; font-weight:600; background:var(--ink); color:var(--surface); cursor:pointer; }
+.btn.ghost{ background:transparent; color:var(--ink); border-color:var(--line); }
+.btn.armado{ background:var(--danger); border-color:var(--danger); color:var(--surface); }
+[id^="g-"], .quadro, .rec{ scroll-margin-top:130px; }
+
+/* Etiqueta de fita crepe */
+.tape{ display:inline-block; font-family:var(--f-hand); font-weight:700; font-size:20px; line-height:1; letter-spacing:.02em; color:var(--tape-ink); background:var(--tape); padding:3px 10px 1px; transform:rotate(-2.5deg); clip-path:polygon(0 12%,6% 0,52% 6%,95% 0,100% 18%,97% 52%,100% 88%,93% 100%,48% 94%,4% 100%,0 86%,3% 50%); }
+.tape.sm{ font-size:17px; padding:2px 8px 0; }
+
+/* Hoje */
+.today{ background:var(--day-soft); border-radius:18px; padding:16px; display:flex; flex-direction:column; gap:14px; }
+.today-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.today .h2{ color:var(--day); font-size:36px; }
+.today-sub{ margin:4px 0 0; color:var(--ink-2); font-size:13.5px; }
+.seg{ display:inline-flex; gap:2px; padding:3px; border-radius:12px; background:var(--surface); border:1px solid var(--line); }
+.seg button{ position:relative; border:0; background:none; padding:7px 12px 9px; min-height:38px; border-radius:9px; font-weight:600; font-size:13.5px; color:var(--ink-2); cursor:pointer; }
+.seg button[aria-checked="true"]{ background:var(--ink); color:var(--surface); }
+.seg button[data-prog]::after{ content:""; position:absolute; left:50%; bottom:3px; width:4px; height:4px; margin-left:-2px; border-radius:50%; background:currentColor; opacity:.7; }
+.prog{ display:flex; flex-direction:column; gap:8px; }
+.prog-segs{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; }
+.prog-segs span{ height:6px; border-radius:3px; background:var(--line); background:color-mix(in srgb, var(--day) 20%, transparent); }
+.prog-segs span.on{ background:var(--day); }
+.prog p{ margin:0; font-size:13.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+.prog b{ color:var(--ink); }
+.lembrete{ display:flex; align-items:center; gap:8px; margin:0; font-size:14px; font-weight:600; }
+.lembrete svg{ width:18px; height:18px; flex:0 0 auto; color:var(--day); }
+
+/* Refeições */
+.meals{ display:flex; flex-direction:column; gap:10px; }
+.meal{ background:var(--surface); border:1px solid var(--line); border-radius:14px; }
+.meal-h{ display:flex; align-items:center; gap:12px; padding:12px 12px 6px 16px; }
+.meal-time{ flex:0 0 auto; width:44px; font-size:12.5px; font-weight:600; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+.meal-title{ flex:1 1 auto; min-width:0; }
+.meal-title h3{ margin:0; font-size:16px; font-weight:700; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.meal-kcal{ font-size:13px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+.meal-b{ padding:0 16px 12px; transition:opacity .2s; }
+.meal.done .meal-b{ opacity:.5; }
+.meal.done .meal-title h3{ color:var(--ink-2); }
+.check{ flex:0 0 auto; width:44px; height:44px; border-radius:50%; border:2px solid var(--line); background:var(--surface); display:grid; place-items:center; cursor:pointer; transition:background .15s, border-color .15s; }
+.check svg{ width:20px; height:20px; opacity:0; color:var(--surface); }
+.check:hover{ border-color:var(--day); }
+.check[aria-checked="true"]{ background:var(--day); border-color:var(--day); }
+.check[aria-checked="true"] svg{ opacity:1; }
+.grp{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin:8px 0 2px; font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-2); }
+.cols{ display:flex; }
+.cols span{ width:62px; text-align:right; }
+.cols span:last-child{ width:44px; }
+.items{ list-style:none; margin:0; padding:0; }
+.items li{ display:grid; grid-template-columns:minmax(0,1fr) 62px 44px; align-items:baseline; padding:7px 0; border-top:1px dashed var(--line); }
+.items li:first-child{ border-top:0; }
+.it-n{ min-width:0; }
+.it-n em{ font-style:normal; color:var(--ink-2); }
+.it-n small{ display:block; color:var(--ink-2); font-size:12.5px; line-height:1.4; }
+.it-g, .it-k{ text-align:right; font-variant-numeric:tabular-nums; }
+.it-g{ font-size:13px; color:var(--ink-2); }
+.it-k{ font-weight:600; }
+.q{ margin-left:6px; padding:0 6px; border-radius:6px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-2); font-size:11px; font-weight:600; line-height:1.6; cursor:pointer; vertical-align:1px; }
+.q:hover{ color:var(--ink); border-color:var(--ink-2); }
+.meal-note{ margin:8px 0 0; padding-top:8px; border-top:1px solid var(--line); font-size:13px; color:var(--ink-2); }
+
+/* Água, noite, sincronização */
+.agua-h{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.agua-t{ font-size:13.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+.agua-t b{ color:var(--ink); }
+.copos{ display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:6px; margin:10px 0 8px; }
+.copo{ border:0; background:none; padding:2px; color:var(--water); cursor:pointer; border-radius:8px; max-width:100%; }
+.copo svg{ display:block; width:100%; height:auto; max-height:48px; }
+.copo .agua-fill{ fill:var(--water); opacity:0; transition:opacity .15s; }
+.copo[aria-pressed="true"] .agua-fill{ opacity:.85; }
+.noite{ display:flex; gap:12px; align-items:flex-start; padding:12px 16px; border-radius:14px; background:var(--surface-2); }
+.noite > svg{ flex:0 0 auto; width:22px; height:22px; margin-top:1px; color:var(--water); }
+.noite p{ margin:0; }
+.sync{ display:flex; align-items:center; gap:7px; margin:2px 0 0; font-size:12px; color:var(--ink-2); }
+.sync i{ width:7px; height:7px; border-radius:50%; background:var(--ink-2); }
+.sync[data-s="conta"] i{ background:var(--b); }
+.sync[data-s="salvando"] i, .sync[data-s="carregando"] i{ background:var(--a); }
+.sync[data-s="erro"] i, .sync[data-s="offline"] i{ background:var(--danger); }
+.livre-card{ display:flex; flex-direction:column; gap:10px; }
+.livre-card p{ margin:0; }
+
+/* Cardápio */
+.semana{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; padding-top:8px; }
+.wd{ position:relative; min-width:0; border:1px solid var(--line); background:var(--surface); border-radius:12px; padding:8px 2px 9px; display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; }
+.wd-n{ font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-2); }
+.wd-l{ font-family:var(--f-display); font-weight:800; font-size:21px; line-height:1.15; color:var(--day); }
+.wd-l.livre{ font-family:var(--f-body); font-size:11px; font-weight:700; line-height:27px; }
+.wd.sel{ background:var(--day-soft); border-color:var(--day); }
+.wd.hoje::before{ content:"hoje"; position:absolute; top:-9px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:700; line-height:1.5; padding:0 6px; border-radius:6px; background:var(--ink); color:var(--surface); }
+.wd-dot{ position:absolute; top:6px; right:6px; width:6px; height:6px; border-radius:50%; background:var(--water); }
+.legenda{ display:flex; flex-wrap:wrap; gap:4px 14px; margin:0; font-size:12.5px; color:var(--ink-2); }
+.legenda span{ display:inline-flex; align-items:center; gap:6px; }
+.legenda i{ width:6px; height:6px; border-radius:50%; background:var(--water); }
+.dia-head{ display:flex; flex-direction:column; gap:12px; padding:16px; border-radius:18px; background:var(--day-soft); }
+.dia-head .h2{ color:var(--day); }
+.nums{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:0; }
+.nums div{ background:var(--surface); border-radius:12px; padding:9px 12px; min-width:0; }
+.nums dt{ font-size:11.5px; font-weight:600; color:var(--ink-2); }
+.nums dd{ margin:0; font-family:var(--f-display); font-weight:800; font-size:21px; line-height:1.3; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.nums dd small{ font-family:var(--f-body); font-size:12px; font-weight:600; color:var(--ink-2); }
+.nums dd .tape{ font-size:17px; }
+
+/* Preparo */
+.marm-grid{ display:grid; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.marm{ min-width:0; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px; }
+.marm-top{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.marm-x{ font-family:var(--f-display); font-weight:800; font-size:19px; color:var(--day); font-variant-numeric:tabular-nums; }
+.marm h3{ margin:0; font-size:14.5px; }
+.marm ul{ list-style:none; margin:0; padding:0; font-size:13px; }
+.marm li{ display:flex; justify-content:space-between; gap:8px; padding:4px 0; border-top:1px dashed var(--line); }
+.marm li span:last-child{ color:var(--ink-2); white-space:nowrap; font-variant-numeric:tabular-nums; }
+.marm-k{ margin:auto 0 0; font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; }
+.passos{ list-style:none; counter-reset:p; margin:0; padding:0; }
+.passos li{ counter-increment:p; display:grid; grid-template-columns:30px minmax(0,1fr); gap:10px; align-items:start; padding:9px 0; border-top:1px dashed var(--line); }
+.passos li:first-child{ border-top:0; }
+.passos li::before{ content:counter(p); width:26px; height:26px; border-radius:50%; display:grid; place-items:center; background:var(--surface-2); font-family:var(--f-display); font-weight:800; font-size:13px; }
+.recs{ display:flex; flex-direction:column; gap:8px; }
+.rec{ background:var(--surface); border:1px solid var(--line); border-radius:14px; }
+.rec summary{ list-style:none; cursor:pointer; display:flex; align-items:center; gap:10px; padding:12px 16px; min-height:48px; font-weight:600; }
+.rec summary::-webkit-details-marker{ display:none; }
+.rec summary::after{ content:""; flex:0 0 auto; width:8px; height:8px; margin:-4px 2px 0 4px; border-right:2px solid var(--ink-2); border-bottom:2px solid var(--ink-2); transform:rotate(45deg); transition:transform .15s; }
+.rec[open] summary::after{ transform:rotate(-135deg); margin-top:4px; }
+.rec-n{ min-width:0; }
+.rec-m{ margin-left:auto; display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end; font-size:12.5px; font-weight:500; color:var(--ink-2); }
+.rec-b{ padding:2px 16px 16px; display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); }
+.rec-b h4{ margin:0 0 6px; font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-2); }
+.rec-b ul, .rec-b ol{ margin:0; padding-left:18px; display:flex; flex-direction:column; gap:4px; font-size:14px; }
+.rec-extra{ grid-column:1/-1; margin:0; font-size:13px; font-weight:600; }
+
+/* Compras */
+.cbar{ display:flex; align-items:center; gap:12px; }
+.cbar .line{ flex:1; height:6px; border-radius:3px; background:var(--surface-2); overflow:hidden; }
+.cbar .line span{ display:block; height:100%; background:var(--b); border-radius:3px; transition:width .2s; }
+.cbar-t{ font-size:13px; color:var(--ink-2); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.cbar-t b{ color:var(--ink); }
+.copia{ width:100%; min-height:180px; font:13px/1.5 var(--f-body); padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--ink); resize:vertical; }
+.cgrupo{ padding-bottom:6px; }
+.clist{ list-style:none; margin:6px 0 0; padding:0; }
+.clist li + li{ border-top:1px dashed var(--line); }
+.ci{ position:relative; display:flex; align-items:flex-start; gap:12px; padding:10px 0; cursor:pointer; }
+.ci input{ position:absolute; opacity:0; width:1px; height:1px; margin:0; }
+.ci-box{ flex:0 0 auto; width:24px; height:24px; margin-top:1px; border-radius:7px; border:2px solid var(--line); background:var(--surface); display:grid; place-items:center; transition:background .15s, border-color .15s; }
+.ci-box svg{ width:15px; height:15px; opacity:0; color:var(--surface); }
+.ci input:checked + .ci-box{ background:var(--b); border-color:var(--b); }
+.ci input:checked + .ci-box svg{ opacity:1; }
+.ci input:focus-visible + .ci-box{ outline:2px solid var(--b); outline-offset:2px; }
+.ci-t{ min-width:0; display:flex; flex-wrap:wrap; align-items:baseline; column-gap:8px; }
+.ci-n{ font-weight:600; }
+.ci-q{ color:var(--ink-2); font-variant-numeric:tabular-nums; }
+.ci-t small{ flex-basis:100%; font-size:12.5px; color:var(--ink-2); }
+.ci input:checked ~ .ci-t .ci-n{ text-decoration:line-through; color:var(--ink-2); }
+
+/* Guia */
+.jump{ display:flex; flex-wrap:wrap; gap:8px; }
+.jump button{ border:1px solid var(--line); background:var(--surface); border-radius:999px; padding:7px 14px; min-height:38px; font-size:13.5px; font-weight:600; cursor:pointer; }
+.quadros{ display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr)); align-items:start; }
+.quadro{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+.quadro header{ display:flex; gap:12px; align-items:flex-start; margin-bottom:6px; }
+.qn{ flex:0 0 auto; font-family:var(--f-display); font-weight:800; font-size:14px; line-height:1; padding:6px 8px; border-radius:8px; background:var(--surface-2); }
+.quadro h3{ margin:0; font-size:16px; }
+.quadro header p{ margin:2px 0 0; font-size:13px; color:var(--ink-2); }
+.qlist{ list-style:none; margin:0; padding:0; }
+.qlist li{ display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-top:1px dashed var(--line); font-size:14px; }
+.qlist li span:last-child{ text-align:right; color:var(--ink-2); }
+.qlist li small{ display:block; font-size:12px; color:var(--ink-2); }
+.qchips{ list-style:none; margin:4px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:6px; }
+.qchips li{ padding:3px 10px; border-radius:999px; background:var(--surface-2); font-size:13.5px; }
+.qnota{ margin:10px 0 0; font-size:12.5px; color:var(--ink-2); }
+.quadro.flash{ animation:flash 1.8s ease-out; }
+@keyframes flash{ 0%,45%{ box-shadow:0 0 0 3px var(--a); } 100%{ box-shadow:0 0 0 0 transparent; } }
+.pl{ display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); }
+.chips-p li{ background:var(--danger-soft); color:var(--danger); font-weight:600; }
+.chips-l li{ background:var(--b-soft); color:var(--b); font-weight:600; }
+.regras{ display:grid; gap:10px; }
+.regras .card h3{ margin-bottom:8px; }
+.fonte{ margin:0; font-size:13px; color:var(--ink-2); }
+
+.toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:calc(20px + env(safe-area-inset-bottom,0px)); z-index:40; max-width:calc(100% - 32px); padding:10px 16px; border-radius:12px; background:var(--ink); color:var(--surface); font-weight:600; font-size:14px; box-shadow:var(--shadow); }
+@media (max-width:719px){ .toast{ bottom:calc(86px + env(safe-area-inset-bottom,0px)); } }
+@media (max-width:380px){
+  .today .h2{ font-size:30px; }
+  .nums dd{ font-size:18px; }
+  .marm-grid{ grid-template-columns:minmax(0,1fr); }
+}
+.instalar{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.instalar p{ margin:0; font-size:14px; }
+.nao-come{ margin:0; padding:12px 14px; border-radius:12px; background:var(--surface-2); font-size:13.5px; color:var(--ink-2); }
+.nao-come b{ color:var(--ink); }
+.cnota{ margin:4px 0 0; font-size:12.5px; color:var(--ink-2); }
+
+/* Peso e água */
+.campos{ display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin:10px 0 8px; }
+.campo{ display:flex; flex-direction:column; gap:4px; flex:1 1 130px; min-width:0; font-size:12.5px; font-weight:600; color:var(--ink-2); }
+.campo input{ font:inherit; font-size:16px; font-weight:500; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:8px 12px; min-height:44px; width:100%; }
+.campo input:focus-visible{ outline:2px solid var(--b); outline-offset:1px; }
+.stats{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:0; }
+.stats > div{ background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 12px; min-width:0; }
+.stats dt{ font-size:11.5px; font-weight:600; color:var(--ink-2); }
+.stats dd{ margin:0; font-family:var(--f-display); font-weight:800; font-size:22px; line-height:1.25; font-variant-numeric:tabular-nums; }
+.stats dd small{ display:block; font-family:var(--f-body); font-size:12px; font-weight:500; color:var(--ink-2); }
+.grafico svg{ display:block; width:100%; height:auto; margin-top:6px; }
+.registros{ list-style:none; margin:6px 0 0; padding:0; }
+.registros li{ display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px dashed var(--line); font-variant-numeric:tabular-nums; }
+.registros li:first-child{ border-top:0; }
+.registros .rd{ flex:0 0 auto; width:88px; color:var(--ink-2); }
+.registros .rk{ font-weight:700; }
+.registros .rv{ font-size:13px; color:var(--ink-2); }
+.registros .del{ margin-left:auto; min-height:34px; padding:4px 10px; border:1px solid var(--line); border-radius:8px; background:none; font-size:12.5px; font-weight:600; color:var(--ink-2); cursor:pointer; }
+.registros .del.armado{ background:var(--danger); border-color:var(--danger); color:var(--surface); }
+.aviso-peso{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.aviso-peso p{ margin:0; font-size:14px; }
+
+/* Macronutrientes */
+.macros{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:0; }
+.macros > div{ background:var(--surface); border-radius:12px; padding:9px 10px; min-width:0; }
+.macros dt{ font-size:11.5px; font-weight:600; color:var(--ink-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.macros dd{ margin:0; font-family:var(--f-display); font-weight:800; font-size:19px; line-height:1.3; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.macros dd small{ font-family:var(--f-body); font-size:11.5px; font-weight:600; color:var(--ink-2); }
+.macros dd.st{ display:flex; align-items:center; gap:4px; margin-top:2px; font-family:var(--f-body); font-size:11.5px; font-weight:500; line-height:1.3; color:var(--ink-2); white-space:normal; }
+.macros dd.st svg{ width:13px; height:13px; flex:0 0 auto; }
+@media (max-width:520px){ .macros{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.tabela-wrap{ overflow-x:auto; }
+.tabela{ width:100%; border-collapse:collapse; font-size:14px; font-variant-numeric:tabular-nums; }
+.tabela th, .tabela td{ text-align:left; padding:8px 8px 8px 0; border-top:1px dashed var(--line); vertical-align:top; }
+.tabela thead th{ border-top:0; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2); }
+.tabela td.n{ white-space:nowrap; }
+.tabela tbody th{ font-weight:600; width:55%; }
+.tabela small{ display:block; font-size:12px; font-weight:400; line-height:1.35; color:var(--ink-2); }
+.tabela td.n{ font-weight:600; }
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{ transition:none !important; animation:none !important; scroll-behavior:auto !important; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-in">
+    <div class="brand">
+      <span class="scale" aria-hidden="true">1.400<small>kcal</small></span>
+      <div class="brand-t">
+        <h1>Plano alimentar</h1>
+        <p id="hdr-data">Dia A e Dia B alternados, domingo livre</p>
+      </div>
+    </div>
+    <span class="badge" id="hdr-badge" data-dia="A">Dia A</span>
+  </div>
+  <div class="tabs-wrap">
+    <nav class="wrap tabs" aria-label="Seções">
+      <a class="tab" href="#hoje" data-view="hoje" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></svg><span>Hoje</span></a>
+      <a class="tab" href="#cardapio" data-view="cardapio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Cardápio</span></a>
+      <a class="tab" href="#preparo" data-view="preparo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M2.5 11h19M9.5 4.5c0 1.3 1 1.7 1 3.2M14 4.5c0 1.3 1 1.7 1 3.2"/></svg><span>Preparo</span></a>
+      <a class="tab" href="#compras" data-view="compras"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 8.5h13l-1.1 11.5H6.6z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg><span>Compras</span></a>
+      <a class="tab" href="#peso" data-view="peso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 10.5a5 5 0 0 1 8 0"/><path d="M12 10.5l1.6-2.2"/></svg><span>Peso</span></a>
+      <a class="tab" href="#guia" data-view="guia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 3.5 5v13.5c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z"/><path d="M12 6.5V20"/></svg><span>Guia</span></a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <section class="view" id="v-hoje" aria-label="Hoje"></section>
+  <section class="view" id="v-cardapio" aria-label="Cardápio" hidden></section>
+  <section class="view" id="v-preparo" aria-label="Preparo" hidden></section>
+  <section class="view" id="v-compras" aria-label="Compras" hidden></section>
+  <section class="view" id="v-peso" aria-label="Peso e água" hidden></section>
+  <section class="view" id="v-guia" aria-label="Guia" hidden></section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const PLAN = {"versao":"2026-11-15c","itens":{"pao_frances":{"nome":"Pão francês sem miolo","medida":"1 unidade","peso":"30 g","q":"Q1","kcal":90,"prot":2.4,"gord":0.9,"carb":17.6,"fibra":0.7},"tapioca":{"nome":"Tapioca","medida":"3 col. sopa rasas de goma","peso":"35 g","q":"Q1","kcal":84,"prot":0.0,"gord":0.0,"carb":21.0,"fibra":0.0},"queijo_minas":{"nome":"Queijo minas frescal","medida":"1 fatia média","peso":"30 g","q":"Q2","kcal":79,"prot":5.2,"gord":6.1,"carb":1.0,"fibra":0.0},"leite":{"nome":"Leite desnatado, puro ou com café","medida":"1 copo","peso":"200 mL","q":"Q3","kcal":70,"prot":6.8,"gord":0.2,"carb":9.8,"fibra":0.0},"cafe":{"nome":"Café ou chá com stevia","medida":"à vontade","peso":"","q":null,"kcal":0,"prot":0,"gord":0,"carb":0,"fibra":0},"melancia":{"nome":"Melancia","medida":"1 fatia média","peso":"200 g","q":"Q9","kcal":66,"prot":1.8,"gord":0.0,"carb":16.2,"fibra":0.2},"kiwi":{"nome":"Kiwi","medida":"1 pequeno","peso":"70 g","q":"Q9","kcal":36,"prot":0.9,"gord":0.4,"carb":8.1,"fibra":1.9},"abacaxi":{"nome":"Abacaxi","medida":"1 fatia","peso":"120 g","q":"Q9","kcal":58,"prot":1.1,"gord":0.1,"carb":14.8,"fibra":1.2},"pera":{"nome":"Pera","medida":"½ média","peso":"≈90 g","q":"Q9","kcal":48,"prot":0.5,"gord":0.1,"carb":12.6,"fibra":2.7},"morango":{"nome":"Morango","medida":"5 unidades","peso":"≈60 g","q":"Q9","kcal":18,"prot":0.5,"gord":0.2,"carb":4.1,"fibra":1.0},"uva":{"nome":"Uva","medida":"10 bagos","peso":"≈50 g","q":"Q9","kcal":27,"prot":0.3,"gord":0.1,"carb":6.8,"fibra":0.5},"iogurte":{"nome":"Iogurte natural desnatado","medida":"1 pote","peso":"170 g","q":"Q3","kcal":70,"prot":6.5,"gord":0.5,"carb":9.9,"fibra":0.0},"castanha":{"nome":"Castanha-do-pará","medida":"2 unidades","peso":"8 g","q":null,"kcal":51,"prot":1.2,"gord":5.1,"carb":1.2,"fibra":0.6},"arroz75":{"nome":"Arroz","medida":"3 col. sopa cheias","peso":"75 g","q":"Q5","kcal":96,"prot":1.9,"gord":0.1,"carb":21.1,"fibra":1.2},"arroz50":{"nome":"Arroz","medida":"2 col. sopa cheias","peso":"50 g","q":"Q5","kcal":64,"prot":1.2,"gord":0.1,"carb":14.1,"fibra":0.8},"feijao":{"nome":"Feijão carioca","medida":"1 concha pequena","peso":"80 g","q":"Q4","kcal":61,"prot":3.8,"gord":0.4,"carb":10.9,"fibra":6.8},"frango_grelhado":{"nome":"Frango grelhado","medida":"1 filé (160 g cru)","peso":"≈115 g","q":"Q6","kcal":206,"prot":34.5,"gord":6.3,"carb":0.5,"fibra":0.1},"almondegas":{"nome":"Almôndegas ao sugo","medida":"3 unidades médias, com molho","peso":"≈200 g","q":"Q6","kcal":263,"prot":33.3,"gord":10.8,"carb":7.8,"fibra":2.4},"picadinho":{"nome":"Picadinho de patinho","medida":"3 col. sopa bem cheias, com caldo","peso":"≈105 g","q":"Q6","kcal":249,"prot":33.8,"gord":9.9,"carb":4.9,"fibra":1.4},"frango_desfiado":{"nome":"Frango desfiado com cúrcuma","medida":"3 col. sopa bem cheias","peso":"≈100 g","q":"Q6","kcal":221,"prot":32.4,"gord":7.5,"carb":4.7,"fibra":1.3},"brocolini_cf":{"nome":"Brocolini e couve-flor no vapor","medida":"vegetal A, pode repetir","peso":"≈90 g","q":"Q7","kcal":26,"prot":2.2,"gord":0.2,"carb":4.6,"fibra":2.2},"repolho":{"nome":"Repolho refogado","medida":"vegetal A, pode repetir","peso":"≈80 g","q":"Q7","kcal":29,"prot":1.1,"gord":0.9,"carb":5.0,"fibra":2.2},"abobora":{"nome":"Abóbora cabotiá assada","medida":"4 col. sopa cheias","peso":"100 g","q":"Q8","kcal":55,"prot":2.1,"gord":1.4,"carb":10.5,"fibra":2.8},"cenoura_vagem":{"nome":"Cenoura e vagem no vapor","medida":"4 col. sopa cheias","peso":"100 g","q":"Q8","kcal":31,"prot":1.6,"gord":0.2,"carb":6.8,"fibra":2.9},"salada":{"nome":"Salada crua, com limão ou vinagre","medida":"à vontade · ref.: alface, tomate, pepino","peso":"≈120 g","q":"Q7","kcal":15,"prot":1.3,"gord":0.2,"carb":3.0,"fibra":1.6}},"dias":{"A":{"nome":"Dia A","quando":"segunda, quarta e sexta","kcal":1399,"prot":111,"macros":{"prot":111,"carb":170,"gord":34,"fibra":30,"pct":{"prot":31,"carb":47,"gord":22},"status":{"prot":"dentro","carb":"dentro","gord":"dentro","fibra":"dentro"}},"refeicoes":[{"id":"cafe","nome":"Café da manhã","hora":"7h30","kcal":239,"marmita":null,"itens":["pao_frances","queijo_minas","leite","cafe"],"hora_itens":[],"sobremesa":null},{"id":"lanche1","nome":"Lanche das 10h","hora":"10h","kcal":102,"marmita":null,"itens":["melancia","kiwi"],"hora_itens":[],"sobremesa":null},{"id":"almoco","nome":"Almoço","hora":"12h30","kcal":517,"marmita":"A1","itens":["arroz75","feijao","frango_grelhado","brocolini_cf","abobora"],"hora_itens":["salada"],"sobremesa":"abacaxi"},{"id":"lanche2","nome":"Lanche da tarde","hora":"15h30","kcal":139,"marmita":null,"itens":["iogurte","morango","castanha"],"hora_itens":[],"sobremesa":null},{"id":"jantar","nome":"Jantar","hora":"19h","kcal":402,"marmita":"A2","itens":["arroz50","almondegas","repolho","cenoura_vagem"],"hora_itens":["salada"],"sobremesa":null}]},"B":{"nome":"Dia B","quando":"terça, quinta e sábado","kcal":1415,"prot":106,"macros":{"prot":106,"carb":182,"gord":33,"fibra":30,"pct":{"prot":29,"carb":50,"gord":21},"status":{"prot":"dentro","carb":"dentro","gord":"dentro","fibra":"dentro"}},"refeicoes":[{"id":"cafe","nome":"Café da manhã","hora":"7h30","kcal":233,"marmita":null,"itens":["tapioca","queijo_minas","leite","cafe"],"hora_itens":[],"sobremesa":null},{"id":"lanche1","nome":"Lanche das 10h","hora":"10h","kcal":106,"marmita":null,"itens":["abacaxi","pera"],"hora_itens":[],"sobremesa":null},{"id":"almoco","nome":"Almoço","hora":"12h30","kcal":544,"marmita":"B1","itens":["arroz75","feijao","picadinho","brocolini_cf","cenoura_vagem"],"hora_itens":["salada"],"sobremesa":"melancia"},{"id":"lanche2","nome":"Lanche da tarde","hora":"15h30","kcal":148,"marmita":null,"itens":["iogurte","uva","castanha"],"hora_itens":[],"sobremesa":null},{"id":"jantar","nome":"Jantar","hora":"19h","kcal":384,"marmita":"B2","itens":["arroz50","frango_desfiado","repolho","abobora"],"hora_itens":["salada"],"sobremesa":null}]}},"marmitas":[{"codigo":"A1","refeicao":"Almoço","dia":"A","qtd":3,"itens":["arroz75","feijao","frango_grelhado","brocolini_cf","abobora"],"kcal":444},{"codigo":"A2","refeicao":"Jantar","dia":"A","qtd":3,"itens":["arroz50","almondegas","repolho","cenoura_vagem"],"kcal":387},{"codigo":"B1","refeicao":"Almoço","dia":"B","qtd":3,"itens":["arroz75","feijao","picadinho","brocolini_cf","cenoura_vagem"],"kcal":463},{"codigo":"B2","refeicao":"Jantar","dia":"B","qtd":3,"itens":["arroz50","frango_desfiado","repolho","abobora"],"kcal":369}],"receitas":[{"id":"arroz","nome":"Arroz","rende":"≈750 g: 6 porções de 75 g + 6 de 50 g","para":["A1","A2","B1","B2"],"ing":["250 g de arroz cru (1¼ xícara)","2½ xícaras de água fervente","¼ de cebola picada (30 g)","1 dente de alho","1 col. chá de azeite","sal"],"passos":["Refogue a cebola e o alho no azeite, junte o arroz e mexa 1 minuto.","Junte a água e o sal, tampe e cozinhe em fogo baixo por 15 a 18 min.","Arroz integral: cerca de 3½ xícaras de água e 35 a 40 min."]},{"id":"feijao","nome":"Feijão magro","rende":"≈8 conchas pequenas (usa 6)","para":["A1","B1"],"ing":["150 g de feijão carioca cru (¾ xícara)","3 xícaras de água","1 folha de louro","¼ de cebola (30 g)","2 dentes de alho","sal"],"passos":["Se der, deixe de molho de 8 a 12 h e descarte a água.","Panela de pressão com a água e o louro: 25 a 30 min depois de pegar pressão.","Refogue a cebola e o alho num fio de água (sem óleo), junte o feijão e o sal e apure 10 min.","Sem bacon, linguiça ou carne de porco. A sobra congela."]},{"id":"frango_grelhado","nome":"Frango grelhado","rende":"3 filés","para":["A1"],"ing":["3 filés de peito de 160 g (480 g), sem pele e sem gordura","suco de 1 limão","2 dentes de alho","½ col. chá de cúrcuma","½ col. chá de páprica doce","pimenta-do-reino e sal","1 col. chá de azeite"],"passos":["Tempere os filés com limão, alho, cúrcuma, páprica, pimenta e sal; deixe 30 min (ou de véspera).","Grelhe em frigideira antiaderente com o azeite, 4 a 5 min de cada lado, até não ficar rosado por dentro.","Na airfryer: 200 °C por 15 a 18 min, virando na metade."]},{"id":"almondegas","nome":"Almôndegas ao sugo","rende":"9 almôndegas (3 porções)","para":["A2"],"ing":["400 g de patinho moído","1 ovo","¼ de cebola ralada (30 g)","1 dente de alho amassado","cheiro-verde e sal","Molho: 4 tomates maduros (400 g) batidos","½ cebola (60 g) e 2 dentes de alho","2 col. chá de azeite, orégano e sal"],"passos":["Misture a carne, o ovo, a cebola, o alho, o cheiro-verde e o sal; faça 9 bolinhas.","Asse a 200 °C por 20 a 25 min, sem fritar.","Molho: refogue cebola e alho no azeite, junte os tomates, orégano e sal e cozinhe 15 a 20 min.","Junte as almôndegas ao molho por mais 5 min."]},{"id":"picadinho","nome":"Picadinho de patinho","rende":"3 porções","para":["B1"],"ing":["450 g de patinho em cubos de 2 cm (peça ao açougue)","1 cebola média picada (90 g)","3 dentes de alho","1 tomate grande picado (150 g)","2 col. chá de azeite","1 folha de louro","½ col. chá de páprica, sal e cheiro-verde","1 xícara de água"],"passos":["Na panela de pressão aberta, sele a carne no azeite em 2 levas.","Junte cebola e alho, depois tomate, louro, páprica, sal e a água.","Pressão por 20 min. Abra e apure o caldo por 5 min; finalize com cheiro-verde."]},{"id":"frango_desfiado","nome":"Frango desfiado com cúrcuma","rende":"3 porções","para":["B2"],"ing":["435 g de peito de frango sem pele","1 folha de louro e sal","1 cebola média (90 g)","2 dentes de alho","1 tomate grande picado (150 g)","½ col. chá de cúrcuma","2 col. chá de azeite","cheiro-verde"],"passos":["Cozinhe o frango numa panela comum com água, louro e sal por 20 a 25 min. Desfie com dois garfos e guarde ½ concha do caldo.","Refogue cebola e alho no azeite, junte tomate, cúrcuma, o frango e o caldo; 5 min.","Finalize com cheiro-verde."]},{"id":"brocolini_cf","nome":"Brocolini e couve-flor no vapor","rende":"6 porções de ≈90 g","para":["A1","B1"],"ing":["270 g de brocolini (2 bandejas), sem as pontas duras dos talos","260 g de floretes de couve-flor"],"passos":["Vapor: couve-flor por 4 a 5 min, brocolini por 3 a 4 min, ainda firmes.","Passe em água gelada e escorra bem."]},{"id":"cenoura_vagem","nome":"Cenoura e vagem no vapor","rende":"6 porções de 100 g","para":["A2","B1"],"ing":["330 g de cenoura em rodelas","290 g de vagem em pedaços de 3 cm"],"passos":["Vapor: cenoura por 8 a 10 min, vagem por 5 a 6 min.","Passe em água gelada e escorra bem."]},{"id":"abobora","nome":"Abóbora cabotiá assada","rende":"6 porções de 100 g","para":["A1","B2"],"ing":["750 g de abóbora descascada em cubos de 2 a 3 cm","1 col. chá de azeite","sal","alecrim ou páprica"],"passos":["Espalhe numa assadeira grande, sem amontoar (se precisar, use duas).","Asse a 200 °C por 25 a 30 min, virando na metade."]},{"id":"repolho","nome":"Repolho refogado","rende":"6 porções de ≈80 g","para":["A2","B2"],"ing":["½ repolho pequeno fatiado fino (600 g)","½ cebola (60 g)","2 dentes de alho","1 col. chá de azeite","sal e uma pitada de cúrcuma"],"passos":["Fogo alto, panela destampada: refogue cebola e alho, junte o repolho e mexa por 6 a 8 min.","Tire ainda firme: ele amolece ao reaquecer."]},{"id":"sopa","nome":"Sopa do plano (opcional, no lugar do jantar)","rende":"1 prato","para":[],"extra":"≈157 kcal e 8 g de proteína","ing":["80 g de couve-flor","50 g de vagem","50 g de repolho","50 g de cogumelos","1 cenoura pequena (80 g)","1 batata pequena (100 g)","cebola, alho e ervas","500 mL de água"],"passos":["Cozinhe tudo na água com sal por 20 min. Pode bater metade para engrossar.","Desengordurada e sem carne, arroz ou macarrão, como pede o plano. Congela bem."]}],"sessao":["Na véspera: deixe o feijão de molho e, se quiser, já tempere o frango para grelhar.","Ligue o forno a 200 °C e ponha o feijão na panela de pressão.","Corte os legumes e a cebola. Misture e enrole as 9 almôndegas.","Forno: abóbora (25 a 30 min) e almôndegas (20 a 25 min), em assadeiras separadas.","Panela comum: frango para desfiar (20 a 25 min). Outra panela: molho de tomate (15 a 20 min).","Fogão: arroz (15 a 18 min).","Feijão pronto: use a pressão para o picadinho (20 min).","Vapor: couve-flor e brocolini, depois cenoura e vagem. Água gelada e escorrer.","Frigideira: frango grelhado e, por último, o repolho.","Finalize: almôndegas no molho (5 min), tempere o feijão, refogue o frango desfiado e apure o caldo do picadinho.","Espalhe tudo em assadeiras para esfriar, monte as 12 marmitas pesando cada item, etiquete e congele."],"congelar":["Esfrie rápido: espalhe as preparações em assadeiras rasas e não deixe nada mais de 2 h fora da geladeira.","Potes de 750 mL que vão ao freezer e ao micro-ondas. Deixe 1 cm livre no topo: caldo e molho expandem.","Etiqueta de fita crepe na tampa: código e data do preparo (ex.: B1 · 15/11). No freezer, até 30 dias.","Descongele na geladeira: tire as marmitas do dia seguinte na noite anterior. Esqueceu? Função descongelar do micro-ondas.","Reaqueça com a tampa entreaberta: 3 a 4 min se descongelada, 6 a 8 min em potência média se congelada, mexendo na metade. Uma colher de água no arroz evita ressecar.","Depois de descongelada, consuma em até 24 h e não congele de novo.","Salada, frutas, iogurte e café da manhã não vão ao freezer. Folhas lavadas e secas, num pote com papel-toalha, duram 4 a 5 dias."],"compras":[{"grupo":"Açougue","nota":null,"itens":[{"id":"frango","nome":"Filé de peito de frango","qtd":"≈950 g","obs":"3 filés de 160 g para grelhar + 435 g para desfiar"},{"id":"patinho","nome":"Patinho em cubos","qtd":"450 g","obs":"peça para cortar em cubos de 2 cm"},{"id":"moido","nome":"Patinho moído","qtd":"400 g","obs":"para as almôndegas"},{"id":"ovo","nome":"Ovo","qtd":"1","obs":"para as almôndegas"}]},{"grupo":"Legumes e verduras","nota":null,"itens":[{"id":"abobora","nome":"Abóbora cabotiá","qtd":"1 pedaço de ≈1,1 kg","obs":"rende 750 g descascada"},{"id":"brocolini","nome":"Brocolini","qtd":"2 bandejas","obs":"≈270 g depois de aparar"},{"id":"couveflor","nome":"Couve-flor","qtd":"½ unidade média","obs":"260 g de floretes"},{"id":"cenoura","nome":"Cenoura","qtd":"3 médias","obs":"330 g"},{"id":"vagem","nome":"Vagem","qtd":"300 g","obs":null},{"id":"repolho","nome":"Repolho","qtd":"½ pequeno","obs":"≈600 g"},{"id":"tomate","nome":"Tomate","qtd":"11 médios","obs":"≈1,4 kg: saladas, molho e refogados"},{"id":"alface","nome":"Alface crespa","qtd":"2 pés","obs":null},{"id":"pepino","nome":"Pepino japonês","qtd":"2","obs":null},{"id":"cebola","nome":"Cebola","qtd":"4 médias","obs":null},{"id":"alho","nome":"Alho","qtd":"1 cabeça grande","obs":null},{"id":"limao","nome":"Limão","qtd":"3","obs":"frango e salada"},{"id":"cheiro","nome":"Cheiro-verde","qtd":"1 maço","obs":null}]},{"grupo":"Frutas e castanhas","nota":"Morango e melancia em pedaço duram 4 a 5 dias. Se der, compre em duas vezes; morango lavado e seco também pode ir ao freezer e vai bem com o iogurte.","itens":[{"id":"melancia","nome":"Melancia","qtd":"1 pedaço de ≈2 kg","obs":"6 fatias de 200 g"},{"id":"abacaxi","nome":"Abacaxi","qtd":"1 médio","obs":"6 fatias de 120 g"},{"id":"kiwi","nome":"Kiwi","qtd":"3","obs":null},{"id":"pera","nome":"Pera","qtd":"2","obs":"usa 1½"},{"id":"morango","nome":"Morango","qtd":"1 bandeja","obs":"15 unidades"},{"id":"uva","nome":"Uva","qtd":"1 cacho pequeno","obs":"≈150 g, 30 bagos"},{"id":"castanha","nome":"Castanha-do-pará","qtd":"1 pacote pequeno","obs":"12 unidades, ≈50 g"}]},{"grupo":"Laticínios e padaria","nota":null,"itens":[{"id":"leite","nome":"Leite desnatado","qtd":"2 caixas de 1 L","obs":"usa 1,2 L"},{"id":"iogurte","nome":"Iogurte natural desnatado","qtd":"6 potes de 170 g","obs":null},{"id":"queijo","nome":"Queijo minas frescal","qtd":"1 peça de ≈200 g","obs":"usa 180 g"},{"id":"pao","nome":"Pão francês","qtd":"3","obs":"congele e aqueça na hora"},{"id":"goma","nome":"Goma de tapioca","qtd":"1 pacote","obs":"usa 105 g"}]},{"grupo":"Despensa (confira o que já tem)","nota":null,"itens":[{"id":"arroz","nome":"Arroz branco ou integral","qtd":"250 g","obs":null},{"id":"feijao","nome":"Feijão carioca","qtd":"150 g","obs":null},{"id":"azeite","nome":"Azeite ou óleo de coco, para cozinhar","qtd":"≈50 mL","obs":"1 a 2 col. chá por receita"},{"id":"stevia","nome":"Stevia, café e chás","qtd":null,"obs":null},{"id":"vinagre","nome":"Vinagre","qtd":null,"obs":"para a salada"},{"id":"temperos","nome":"Temperos naturais","qtd":null,"obs":"cúrcuma, páprica doce, orégano, louro, alecrim, pimenta e sal"}]},{"grupo":"Para as marmitas","nota":null,"itens":[{"id":"potes","nome":"Potes de 750 mL (freezer e micro-ondas)","qtd":"12","obs":null},{"id":"fita","nome":"Fita crepe e caneta","qtd":null,"obs":"para as etiquetas"}]}],"quadros":[{"id":"Q1","nome":"Pães","substitui":"o pão francês sem miolo do café da manhã","itens":[["Pão árabe","1 médio"],["Pão integral","1 fatia"],["Pão glúten","1 fatia"],["Pão de forma","1 fatia"],["Pão de forma diet","2 fatias"],["Pão de centeio","1 fatia"],["Pão de graham","1 fatia"],["Pão de aveia","1 fatia"],["Pão de batata-doce","1 fatia"],["Pão de aipim","1 fatia"],["Tapioca","1 porção"]]},{"id":"Q2","nome":"Queijos e pastas","substitui":"a fatia de queijo minas","itens":[["Tofu (queijo de soja)","2 col. sopa cheias"],["Ricota light","1 fatia grossa"],["Requeijão light","1 col. sopa cheia"],["Catupiry light","1 fatia fina"],["Polenguinho light","1 unidade"],["Cottage","2 col. sopa cheias"],["Manteiga","2 pontas de faca"],["Geleia de frutas diet","2 col. sopa rasas"]]},{"id":"Q3","nome":"Leite, iogurtes e sucos","substitui":"o copo de leite; nos lanches, vale como 1 das 2 unidades","itens":[["Suco de fruta","1 copo (200 mL)"],["Iogurte natural desnatado","1 copo (200 mL)"],["Coalhada","1 copo (200 mL)"],["Iogurte com sabor (light, 0% gordura)","1 copo (200 mL)"],["Leite em pó desnatado","2 col. sopa cheias"],["Queijo minas","1 fatia média"]]},{"id":"Q4","nome":"Leguminosas","substitui":"a concha pequena de feijão","itens":[["Lentilha cozida","2 col. sopa rasas"],["Soja","2 col. sopa"],["Grão-de-bico","2 col. sopa"],["Quinoa","3 col. sopa"]]},{"id":"Q5","nome":"Carboidratos","substitui":"o arroz, colher por colher","nota":"Leitura do quadro: cada medida vale 1 colher de arroz (é o que bate em calorias). No almoço, com 3 colheres de arroz, use 3 medidas. Se a nutróloga orientar diferente, siga ela.","itens":[["Angu (polenta, fubá)","1 col. sopa"],["Batata inglesa cozida","1 unidade pequena"],["Farinha de mandioca","1 col. sobremesa"],["Macarrão cozido","1 col. sopa cheia"],["Nhoque","1 col. sopa"],["Panqueca","1 unidade pequena"],["Pirão","1 col. sopa"],["Purê de batata","1 col. sopa"],["Farofa","1 col. sobremesa"],["Aipim ou inhame cozido","1 unidade pequena"],["Outros tipos de batata","1 unidade pequena"]]},{"id":"Q6","nome":"Carnes e ovos","substitui":"a porção de carne do almoço e do jantar","itens":[["Bife de chapa","1 unidade média"],["Almôndegas","3 unidades médias"],["Carne moída","3 col. sopa"],["Picadinho de carne","3 col. sopa"],["Carne assada","2 fatias finas"],["Bife rolê","2 unidades pequenas"],["Frango","2 fatias finas"],["Peru","3 fatias finas"],["Frango desfiado","3 col. sopa"],["Salmão ou atum","1 posta média","até 2 vezes por semana"],["Ovo","1 unidade"],["Dobradinha","1 pires de chá"]]},{"id":"Q7","nome":"Vegetais A","substitui":"os vegetais à vontade","livre":true,"itens":[["Acelga"],["Agrião"],["Aipo"],["Alface"],["Alho"],["Almeirão"],["Berinjela"],["Bertalha"],["Brocolini"],["Cebola"],["Chicória"],["Couve"],["Couve-flor"],["Endívia"],["Espinafre"],["Maxixe"],["Mostarda"],["Pepino"],["Repolho"],["Taioba"],["Tomate"]]},{"id":"Q8","nome":"Vegetais B","substitui":"as 4 col. sopa de vegetal B","livre":true,"itens":[["Abóbora"],["Cenoura"],["Chuchu"],["Nabo"],["Vagem"],["1 prato de sopa"]]},{"id":"Q9","nome":"Frutas","substitui":"cada fruta (2 nos lanches, 1 de sobremesa)","itens":[["Gelatina diet ou light","1 porção"],["Abacaxi","1 fatia"],["Ameixa","2 médias"],["Caju","2 unidades"],["Fruta-do-conde","1 média"],["Melancia","1 fatia média"],["Melão","1 fatia média"],["Morango","5 unidades"],["Pera","½ média"],["Tangerina","1 unidade"],["Uva moscatel ou preta","10 bagos"],["Uva itália ou rubi","5 bagos"],["Cajá","1 grande"],["Kiwi","1 pequeno"]]}],"nao_come":["ervilha","carne de porco","peixe que não seja salmão ou atum","abobrinha","brócolis comum (só brocolini)","jiló","rabanete","beterraba","quiabo","banana","goiaba","mamão","maçã","laranja"],"regras":[{"titulo":"No dia a dia","itens":["Não fique mais de 3 a 4 horas sem comer.","Beba no mínimo 2 L de água por dia (a aba Peso calcula a sua meta pelo peso).","Nada de líquidos durante as refeições: beba 30 min antes ou depois.","Coma devagar, descansando os talheres, de preferência num lugar tranquilo.","Fome fora de hora: gelatina ou 2 castanhas-do-pará.","Atividade física: 50 a 60 min, de 3 a 4 vezes por semana.","Pese-se só nas consultas: uma balança pode diferir da outra."]},{"titulo":"No preparo","itens":["Grelhado, assado, cozido ou refogado, com pouco óleo (de preferência óleo de coco).","Tire toda a gordura das carnes e a pele das aves e do salmão.","Salada: vinagre, limão, sal, cebola, cebolinha, salsa, cheiro-verde e cúrcuma à vontade. Azeite é opcional, até 1 col. sobremesa.","Legumes: cozinhe só até ficarem macios.","Usou farinha ou maisena nos vegetais? Tire 1 colher de arroz.","Massas sem queijo ralado, com molho de tomate ou bolonhesa.","Integrais são calóricos: coma com moderação.","Laticínios desnatados ou leites vegetais (amêndoa, coco, chia, arroz).","Açúcar: evite o refinado (troque por demerara orgânico ou de coco). Adoçante, só stevia.","Doce diet ou light também engorda.","Salmão e atum: até 2 vezes por semana."]},{"titulo":"Em festas","itens":["Não vá com fome: coma antes.","Prefira salgados assados aos fritos e cuide da quantidade.","Álcool está na lista de proibidos: pense antes."]}],"proibido":["Doces em geral","Chocolate","Maionese","Creme de leite","Óleo em excesso","Frituras","Sal em excesso","Álcool","Carne de porco e derivados","Refrigerantes","Molhos industrializados","Temperos industrializados","Salgadinhos","Adoçantes (exceto stevia)"],"liberado":["Chá de gengibre com limão","Café","Suco de espinafre","Folhas verdes","Carnes grelhadas","Leite vegetal","Ovo orgânico","Azeite extravirgem","Cacau puro","Ora-pro-nóbis","Kefir de água e de coco","Salsa","Gengibre","Cúrcuma"],"ajustes":["Para chegar aos 1.400 kcal sem o azeite na salada: carne um pouco maior (≈115 g pronta), 2 castanhas-do-pará no lanche da tarde (permitidas nas orientações), tapioca de 3 colheres, 4 colheres cheias de vegetal B (100 g) e 2 col. chá de azeite no refogado das carnes. As castanhas e o azeite também deixam a gordura dentro da faixa de referência.","Lanche da tarde: uma das 2 frutas virou iogurte natural desnatado, opção do Quadro 3 que o plano permite nos lanches.","Adoçante: stevia, como pedem as orientações (o plano fala em adoçante artificial).","Peixe fica fora do cardápio fixo: salmão ou atum entram como troca da carne, até 2 vezes por semana.","Como você começou a academia, vale mostrar este cardápio à nutróloga na próxima consulta."],"sopa":{"kcal":157,"prot":8},"ref":{"prot_g":[80,120],"prot_pct_min":25,"carb_pct":[45,65],"gord_pct":[20,35],"fibra_min":25},"fontes":{"taco":{"nome":"Tabela Brasileira de Composição de Alimentos – TACO (NEPA/UNICAMP)","url":"https://www.nescon.medicina.ufmg.br/biblioteca/imagem/1549.pdf"},"proteina":{"nome":"Grosicki et al., Current Developments in Nutrition, 2024 (resumo)","url":"https://www.nestlemedicalhub.com/evidence/study-summary-diet-and-physical-activity-during-weight-loss-with-glp-1-medications"},"agua":{"nome":"Tua Saúde: quantos copos de água beber por dia","url":"https://www.tuasaude.com/news/2026/09/07/quantos-copos-de-agua-voce-deve-beber-por-dia/"}}};
+const LEMBRETE = 'medicação';
+const PWA = true;
+const I = PLAN.itens;
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+const fmt = n => Number(n).toLocaleString('pt-BR');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const DOW_DIA = ['L', 'A', 'B', 'A', 'B', 'A', 'B'];           // 0 = domingo
+const DOW_CURTO = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+const DOW_LONGO = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
+const NOME_DIA = { A: 'Dia A', B: 'Dia B', L: 'Dia livre' };
+const MARM = { A: ['A1', 'A2'], B: ['B1', 'B2'] };
+const VIEWS = ['hoje', 'cardapio', 'preparo', 'compras', 'peso', 'guia'];
+const MEAL_IDS = ['cafe', 'lanche1', 'almoco', 'lanche2', 'jantar'];
+const CURTO = { arroz75: 'Arroz', arroz50: 'Arroz', feijao: 'Feijão', frango_grelhado: 'Frango grelhado', almondegas: 'Almôndegas ao sugo',
+  picadinho: 'Picadinho', frango_desfiado: 'Frango desfiado', brocolini_cf: 'Brocolini e couve-flor', cenoura_vagem: 'Cenoura e vagem',
+  abobora: 'Abóbora', repolho: 'Repolho refogado' };
+const ICON = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  floco: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2.5v19M3.8 7.25l16.4 9.5M3.8 16.75l16.4-9.5M9.5 4l2.5 2 2.5-2M9.5 20l2.5-2 2.5 2"/></svg>',
+  sino: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>',
+  copo: '<svg viewBox="0 0 30 40" aria-hidden="true"><path class="agua-fill" d="M7.4 15h15.2l-1.85 19.4c-.15 1.5-1.15 2.4-2.6 2.4h-6.3c-1.45 0-2.45-.9-2.6-2.4z"/><path d="M4.5 4h21l-3 31.1c-.25 2.3-1.85 3.6-4 3.6h-7c-2.15 0-3.75-1.3-4-3.6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'
+};
+ICON.ok = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.5 9.5"/></svg>';
+ICON.alerta = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg>';
+
+/* ---------- Peso e meta de água ---------- */
+const AGUA_MIN_ML = 2000, COPO_ML = 250, FATOR_PADRAO = 35;
+const fmtKg = n => Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmtKgEixo = n => Number(n).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+const fmtL = ml => (ml / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+const fmtData = iso => { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; };
+const fmtDataCurta = iso => { const [, m, d] = iso.split('-'); return `${d}/${m}`; };
+const num = s => { const v = parseFloat(String(s == null ? '' : s).trim().replace(/\s/g, '').replace(',', '.')); return Number.isFinite(v) ? v : NaN; };
+function pesoState() {
+  const s = store.get('peso') || {};
+  const registros = (Array.isArray(s.registros) ? s.registros : [])
+    .filter(x => x && typeof x.d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x.d) && Number.isFinite(x.kg))
+    .sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0));
+  return { registros, meta: Number.isFinite(s.meta) ? s.meta : null, fator: Number.isFinite(s.fator) ? s.fator : FATOR_PADRAO };
+}
+function metaAgua(p) {
+  const ultimo = p.registros[p.registros.length - 1] || null;
+  const calc = ultimo ? Math.round(ultimo.kg * p.fator) : 0;
+  return { ml: Math.max(AGUA_MIN_ML, calc), calc, ultimo };
+}
+
+const reduzMovimento = () => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+
+const pad = n => String(n).padStart(2, '0');
+const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const longDate = d => { try { return d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) { return dateKey(d); } };
+let today = new Date();
+let todayKey = 'dia-' + dateKey(today);
+
+/* ---------- Salvamento: conta (db, privado por pessoa) com cópia neste aparelho ---------- */
+const store = (() => {
+  const LS = 'plano1400:';
+  const slots = new Map();
+  let db = null, uid = null, status = 'local';
+  let onChange = () => {};
+  const TXT = {
+    local: 'Salvo neste aparelho',
+    carregando: 'Conectando à sua conta…',
+    conta: 'Salvo na sua conta',
+    salvando: 'Salvando…',
+    offline: 'Sem conexão com a conta agora; salvo neste aparelho',
+    erro: 'Não deu para salvar na conta; ficou salvo neste aparelho'
+  };
+  function lsGet(k) { try { const v = localStorage.getItem(LS + k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(LS + k, JSON.stringify(v)); } catch (e) { /* sem armazenamento */ } }
+  function slot(k) {
+    let s = slots.get(k);
+    if (!s) { s = { state: lsGet(k), unsub: null, saving: false, dirty: false, confirmed: false, timer: null, deb: null }; slots.set(k, s); }
+    return s;
+  }
+  function paint() { $$('[data-sync]').forEach(el => { el.dataset.s = status; const sp = el.querySelector('span'); if (sp) sp.textContent = TXT[status]; }); }
+  function setStatus(s) { status = s; paint(); }
+  function path(k) { return 'data/users/' + uid + '/' + k; }
+  function get(k) { return slot(k).state; }
+  function set(k, v) {
+    const s = slot(k);
+    s.state = v; lsSet(k, v); s.dirty = true;
+    if (db) { clearTimeout(s.deb); s.deb = setTimeout(() => flush(k), 450); }
+  }
+  async function flush(k) {
+    const s = slot(k);
+    if (!db || s.saving || !s.dirty) return;
+    s.saving = true; s.dirty = false; setStatus('salvando');
+    const body = JSON.parse(JSON.stringify(s.state || {}));
+    let ok = false;
+    for (let tentativa = 0; tentativa < 2 && !ok; tentativa++) {
+      try { await db.doc(path(k)).set(body); ok = true; }
+      catch (e) {
+        if (!(e && e.code === 'unavailable') || tentativa === 1) break;
+        await new Promise(r => setTimeout(r, 600 + Math.random() * 900));
+      }
+    }
+    s.saving = false;
+    if (!ok) { setStatus('erro'); return; }
+    if (s.dirty) { flush(k); return; }
+    setStatus('conta');
+  }
+  function watch(k) {
+    if (!db) return;
+    const s = slot(k);
+    if (s.unsub) return;
+    s.confirmed = false;
+    clearTimeout(s.timer);
+    s.timer = setTimeout(() => { if (!s.confirmed && status !== 'erro') setStatus('offline'); }, 10000);
+    try {
+      s.unsub = db.doc(path(k)).onSnapshot(snap => {
+        if (!snap.metadata.fromCache && !s.confirmed) {
+          s.confirmed = true; clearTimeout(s.timer);
+          if (status === 'carregando' || status === 'offline') setStatus('conta');
+        }
+        if (s.saving || s.dirty || snap.metadata.hasPendingWrites || !snap.exists) return;
+        const v = JSON.parse(JSON.stringify(snap.data() || {}));
+        if (JSON.stringify(v) === JSON.stringify(s.state)) return;
+        s.state = v; lsSet(k, v); onChange(k);
+      }, err => {
+        clearTimeout(s.timer); s.unsub = null;
+        setStatus(err && err.code === 'revoked' ? 'local' : 'offline');
+      });
+    } catch (e) { clearTimeout(s.timer); setStatus('local'); }
+  }
+  function unwatch(k) { const s = slots.get(k); if (s && s.unsub) { s.unsub(); s.unsub = null; clearTimeout(s.timer); } }
+  async function init(keysFn) {
+    paint();
+    if (!(window.claude && typeof window.claude.use === 'function')) return;
+    try {
+      const [dbNs, userNs] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+      if (!dbNs || !userNs) return;
+      const id = await userNs.id();
+      if (!id) return;
+      db = dbNs; uid = id;
+      setStatus('carregando');
+      keysFn().forEach(watch);
+      slots.forEach((s, k) => { if (s.dirty) flush(k); });
+    } catch (e) { setStatus('local'); }
+  }
+  return { get, set, watch, unwatch, init, paint, set onChange(fn) { onChange = fn; } };
+})();
+
+/* ---------- Navegação por abas (#hoje, #cardapio, ...) ---------- */
+let atual = null;
+function show(v, opts = {}) {
+  if (!VIEWS.includes(v)) v = 'hoje';
+  if (v === atual) return;
+  VIEWS.forEach(x => { document.getElementById('v-' + x).hidden = x !== v; });
+  $$('.tab').forEach(a => { if (a.dataset.view === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  atual = v;
+  if (!opts.keepScroll) window.scrollTo(0, 0);
+}
+function go(v) { show(v); if (location.hash !== '#' + v) location.hash = v; }
+window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+
+function keepFocus(fn) {
+  const a = document.activeElement;
+  const id = a && a.id;
+  fn();
+  if (id) { const n = document.getElementById(id); if (n && n !== document.activeElement) { try { n.focus({ preventScroll: true }); } catch (e) { n.focus(); } } }
+}
+let toastTimer = null;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2400); }
+const tapeSm = c => `<span class="tape sm">${c}</span>`;
+
+/* ---------- Peças de refeição ---------- */
+function itemRow(k, prefixo) {
+  const it = I[k];
+  const q = it.q ? `<button type="button" class="q" data-q="${it.q}" aria-label="Ver trocas do quadro ${it.q.slice(1)}">${it.q}</button>` : '';
+  return `<li><span class="it-n">${prefixo ? `<em>${prefixo}</em> ` : ''}${esc(it.nome)}<small>${esc(it.medida)}${q}</small></span><span class="it-g">${esc(it.peso)}</span><span class="it-k">${it.kcal}</span></li>`;
+}
+function mealCard(m, opt = {}) {
+  const cols = '<span class="cols" aria-hidden="true"><span>peso</span><span>kcal</span></span>';
+  let corpo;
+  if (m.marmita) {
+    corpo = `<p class="grp"><span>Na marmita</span>${cols}</p><ul class="items">${m.itens.map(k => itemRow(k)).join('')}</ul>`
+      + `<p class="grp"><span>Na hora</span></p><ul class="items">${m.hora_itens.map(k => itemRow(k)).join('')}${m.sobremesa ? itemRow(m.sobremesa, 'Sobremesa:') : ''}</ul>`;
+  } else {
+    corpo = `<p class="grp"><span>Itens</span>${cols}</p><ul class="items">${m.itens.map(k => itemRow(k)).join('')}</ul>`;
+  }
+  if (m.id === 'jantar') corpo += `<p class="meal-note">Se preferir, troque o jantar por 1 prato da <button type="button" class="link" data-goto="sopa">sopa do plano</button> (≈${PLAN.sopa.kcal} kcal).</p>`;
+  const tape = m.marmita ? `<span class="tape" title="Marmita ${m.marmita}">${m.marmita}</span>` : '';
+  const chk = opt.check ? `<button type="button" class="check" role="checkbox" id="chk-${m.id}" data-meal="${m.id}" aria-checked="${opt.done ? 'true' : 'false'}" aria-label="${esc(m.nome)} feita">${ICON.check}</button>` : '';
+  return `<article class="meal${opt.done ? ' done' : ''}"><header class="meal-h"><span class="meal-time">${m.hora}</span><div class="meal-title"><h3>${esc(m.nome)}${tape ? ' ' + tape : ''}</h3><span class="meal-kcal">${fmt(m.kcal)} kcal</span></div>${chk}</header><div class="meal-b">${corpo}</div></article>`;
+}
+
+/* ---------- Hoje ---------- */
+function livreCard() {
+  return `<section class="card livre-card" data-dia="L">
+    <h3 class="h3">Sem cardápio hoje</h3>
+    <p>Você acorda mais tarde e junta ou pula refeições, então organize do seu jeito. Se quiser seguir um cardápio, escolha A ou B acima.</p>
+    <ul class="bul">
+      <li>Monte os pratos com as <button type="button" class="link" data-goto="trocas">trocas da nutróloga</button>. Os proibidos continuam valendo.</li>
+      <li>Mesmo começando tarde, não fique mais de 3 a 4 horas acordada sem comer.</li>
+      <li>Jantar leve: a <button type="button" class="link" data-goto="sopa">sopa do plano</button> (≈${PLAN.sopa.kcal} kcal) congela bem.</li>
+      <li>Bom dia para a <button type="button" class="link" data-goto="preparo">sessão de marmitas</button> da semana.</li>
+    </ul>
+  </section>`;
+}
+function aguaCard(n) {
+  const p = pesoState(), m = metaAgua(p);
+  const total = Math.max(1, Math.ceil(m.ml / COPO_ML));
+  const feito = Math.min(n, total);
+  const cols = total <= 8 ? total : Math.ceil(total / Math.ceil(total / 8));
+  const copos = Array.from({ length: total }, (_, i) => `<button type="button" class="copo" id="copo-${i + 1}" data-copo="${i + 1}" aria-pressed="${i < feito ? 'true' : 'false'}" aria-label="Copo ${i + 1} de ${total}, 250 mL">${ICON.copo}</button>`).join('');
+  const regra = m.ultimo
+    ? `${fmtKg(m.ultimo.kg)} kg × ${p.fator} mL = ${fmtL(m.calc)} L${m.calc < AGUA_MIN_ML ? ', abaixo do mínimo da nutróloga, então fica em 2 L' : ''}.`
+    : `mínimo da nutróloga. <button type="button" class="link" data-goto="peso">Registre seu peso</button> para calcular por ${p.fator} mL por kg.`;
+  return `<section class="card"><div class="agua-h"><h3 class="h3">Água</h3><span class="agua-t"><b>${fmtL(feito * COPO_ML)} L</b> de ${fmtL(m.ml)} L</span></div><div class="copos" style="grid-template-columns:repeat(${cols},minmax(0,1fr))" role="group" aria-label="Copos de água de 250 mL">${copos}</div><p class="hint">Meta: ${regra} Beba fora das refeições, 30 min antes ou depois.</p></section>`;
+}
+function lembretePeso() {
+  const u = pesoState().registros.slice(-1)[0];
+  if (!u) return `<section class="card aviso-peso"><p>Registre seu peso para a meta de água acompanhar você.</p><button type="button" class="link" data-goto="peso">Registrar</button></section>`;
+  const dias = Math.round((Date.parse(dateKey(today)) - Date.parse(u.d)) / 86400000);
+  if (dias < 7) return '';
+  return `<section class="card aviso-peso"><p>Seu último peso é de ${fmtDataCurta(u.d)}, há ${dias} dias.</p><button type="button" class="link" data-goto="peso">Registrar o desta semana</button></section>`;
+}
+function noiteCard() {
+  const t = new Date(today); t.setDate(t.getDate() + 1);
+  const p = DOW_DIA[t.getDay()];
+  const txt = p === 'L'
+    ? 'Amanhã é domingo livre: nada para descongelar.'
+    : `<b>Hoje à noite:</b> passe ${tapeSm(MARM[p][0])} e ${tapeSm(MARM[p][1])} do freezer para a geladeira. Amanhã é ${NOME_DIA[p]}.`;
+  return `<section class="noite">${ICON.floco}<p>${txt}</p></section>`;
+}
+function bannerInstalar() {
+  if (!PWA) return '';
+  let dispensado = false;
+  try { dispensado = localStorage.getItem('plano1400:instalar-ok') === '1'; } catch (e) { /* sem armazenamento */ }
+  let instalado = window.navigator.standalone === true;
+  try { instalado = instalado || window.matchMedia('(display-mode: standalone)').matches; } catch (e) { /* sem suporte */ }
+  if (instalado || dispensado) return '';
+  return `<section class="card instalar"><p><b>Para instalar no iPhone:</b> no Safari, toque em Compartilhar e depois em <b>Adicionar à Tela de Início</b>.</p><button type="button" class="link" id="instalar-ok">Entendi</button></section>`;
+}
+function renderHoje() {
+  const st = store.get(todayKey) || {};
+  const prog = DOW_DIA[today.getDay()];
+  const dia = (st.dia === 'A' || st.dia === 'B' || st.dia === 'L') ? st.dia : prog;
+  const feitos = st.feitos || {};
+  const agua = Math.max(0, Math.min(40, Number(st.agua) || 0));
+  const sub = dia === prog
+    ? (prog === 'L' ? 'Domingo sem cardápio: você organiza.' : `Programado para ${DOW_LONGO[today.getDay()].toLowerCase()}.`)
+    : `Trocado só hoje. O programado era ${NOME_DIA[prog]}.`;
+  const opcoes = ['A', 'B', 'L'].map(o => `<button type="button" role="radio" id="hoje-${o}" data-set-dia="${o}" aria-checked="${o === dia}"${o === prog ? ' data-prog title="Programado para hoje"' : ''}>${o === 'L' ? 'Livre' : 'Dia ' + o}</button>`).join('');
+  let html = `<section class="today" data-dia="${dia}">
+    <div class="today-top">
+      <div><p class="eyebrow">Hoje · ${esc(longDate(today))}</p><h2 class="h2">${NOME_DIA[dia]}</h2><p class="today-sub">${sub}</p></div>
+      <div class="seg" role="radiogroup" aria-label="Cardápio de hoje">${opcoes}</div>
+    </div>`;
+  if (dia !== 'L') {
+    const D = PLAN.dias[dia];
+    const nFeitas = MEAL_IDS.filter(id => feitos[id]).length;
+    const kFeitas = D.refeicoes.filter(m => feitos[m.id]).reduce((s, m) => s + m.kcal, 0);
+    html += `<div class="prog"><div class="prog-segs" aria-hidden="true">${D.refeicoes.map(m => `<span class="${feitos[m.id] ? 'on' : ''}"></span>`).join('')}</div>
+      <p><b>${nFeitas} de 5</b> refeições · <b>${fmt(kFeitas)}</b> de ${fmt(D.kcal)} kcal</p></div>`;
+  }
+  if (today.getDay() === 3) html += `<p class="lembrete">${ICON.sino}Quarta: ${LEMBRETE} hoje à noite.</p>`;
+  html += `</section>`;
+  html = bannerInstalar() + html + lembretePeso();
+  if (dia !== 'L') html += `<div class="meals" data-dia="${dia}">${PLAN.dias[dia].refeicoes.map(m => mealCard(m, { check: true, done: !!feitos[m.id] })).join('')}</div>`;
+  else html += livreCard();
+  html += aguaCard(agua) + noiteCard() + `<p class="sync" data-sync><i></i><span></span></p>`;
+  keepFocus(() => { $('#v-hoje').innerHTML = html; });
+  const b = $('#hdr-badge'); b.dataset.dia = dia; b.textContent = NOME_DIA[dia];
+  $('#hdr-data').textContent = longDate(today);
+  store.paint();
+}
+function patchHoje(fn) {
+  const cur = store.get(todayKey) || {};
+  const next = JSON.parse(JSON.stringify(cur));
+  fn(next);
+  store.set(todayKey, next);
+  renderHoje();
+}
+
+/* ---------- Cardápio ---------- */
+function macrosTiles(mc) {
+  const st = s => s === 'dentro' ? `${ICON.ok}na referência` : `${ICON.alerta}${s} da referência`;
+  return `<dl class="macros">
+    <div><dt>Proteína</dt><dd>${mc.prot} <small>g · ${mc.pct.prot}%</small></dd><dd class="st">${st(mc.status.prot)}</dd></div>
+    <div><dt>Carboidratos</dt><dd>${mc.carb} <small>g · ${mc.pct.carb}%</small></dd><dd class="st">${st(mc.status.carb)}</dd></div>
+    <div><dt>Gorduras</dt><dd>${mc.gord} <small>g · ${mc.pct.gord}%</small></dd><dd class="st">${st(mc.status.gord)}</dd></div>
+    <div><dt>Fibras</dt><dd>${mc.fibra} <small>g</small></dd><dd class="st">${st(mc.status.fibra)}</dd></div></dl>`;
+}
+let verDia = null;
+function renderCardapio() {
+  const progHoje = DOW_DIA[today.getDay()];
+  const sel = verDia || (progHoje === 'L' ? 'A' : progHoje);
+  const semana = ORDEM_SEMANA.map(dow => {
+    const l = DOW_DIA[dow];
+    const cls = ['wd', l === sel ? 'sel' : '', dow === today.getDay() ? 'hoje' : ''].filter(Boolean).join(' ');
+    return `<button type="button" class="${cls}" data-dia="${l}" data-ver="${l}" aria-label="${DOW_LONGO[dow]}: ${NOME_DIA[l]}${dow === 3 ? ', ' + LEMBRETE + ' à noite' : ''}"><span class="wd-n">${DOW_CURTO[dow]}</span><span class="wd-l${l === 'L' ? ' livre' : ''}">${l === 'L' ? 'livre' : l}</span>${dow === 3 ? '<i class="wd-dot"></i>' : ''}</button>`;
+  }).join('');
+  let html = `<section class="block"><p class="eyebrow">A semana</p><h2 class="h2">Dois cardápios que se alternam</h2>
+    <p class="lead">Dia A na segunda, quarta e sexta; Dia B na terça, quinta e sábado. Domingo é livre. Toque num dia para ver o cardápio.</p>
+    <div class="semana">${semana}</div>
+    <p class="legenda"><span><i></i>Quarta à noite: ${LEMBRETE}</span></p></section>`;
+  if (sel === 'L') {
+    html += `<section class="card livre-card" data-dia="L"><h3 class="h3">Domingo livre</h3><p>Sem cardápio: você monta as refeições no seu horário, com as <button type="button" class="link" data-goto="trocas">trocas</button>. Aos domingos, a aba Hoje mostra os lembretes do dia.</p></section>`;
+  } else {
+    const D = PLAN.dias[sel];
+    html += `<section class="dia-head" data-dia="${sel}"><div><p class="eyebrow">${esc(D.quando)}</p><h2 class="h2">${D.nome}</h2></div>
+      <dl class="nums"><div><dt>Total do dia</dt><dd>${fmt(D.kcal)} <small>kcal</small></dd></div><div><dt>Plano</dt><dd>1.400 <small>kcal</small></dd></div><div><dt>Marmitas</dt><dd>${tapeSm(MARM[sel][0])} ${tapeSm(MARM[sel][1])}</dd></div></dl>
+      ${macrosTiles(D.macros)}
+      <p class="hint">Comparado com referências gerais, não com metas da nutróloga. <button type="button" class="link" data-goto="macros">Ver a comparação</button></p></section>
+      <div class="meals" data-dia="${sel}">${D.refeicoes.map(m => mealCard(m)).join('')}</div>`;
+  }
+  keepFocus(() => { $('#v-cardapio').innerHTML = html; });
+}
+
+/* ---------- Preparo ---------- */
+function renderPreparo() {
+  const marm = PLAN.marmitas.map(m => `<article class="marm" data-dia="${m.dia}">
+      <div class="marm-top"><span class="tape">${m.codigo}</span><span class="marm-x">×${m.qtd}</span></div>
+      <h3>${m.refeicao} do Dia ${m.dia}</h3>
+      <ul>${m.itens.map(k => `<li><span>${esc(CURTO[k] || I[k].nome)}</span><span>${esc(I[k].peso)}</span></li>`).join('')}</ul>
+      <p class="marm-k">${m.kcal} kcal por marmita</p></article>`).join('');
+  const recs = PLAN.receitas.map(r => `<details class="rec" id="rec-${r.id}"><summary><span class="rec-n">${esc(r.nome)}</span><span class="rec-m">${esc(r.rende)}${r.para.length ? ' · ' + r.para.map(tapeSm).join(' ') : ''}</span></summary>
+      <div class="rec-b">${r.extra ? `<p class="rec-extra">${esc(r.extra)}</p>` : ''}<div><h4>Ingredientes</h4><ul>${r.ing.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div><div><h4>Como fazer</h4><ol>${r.passos.map(x => `<li>${esc(x)}</li>`).join('')}</ol></div></div></details>`).join('');
+  $('#v-preparo').innerHTML = `<section class="block"><p class="eyebrow">Preparo da semana</p><h2 class="h2">12 marmitas, 3 de cada</h2>
+      <p class="lead">Cobrem os 6 dias com cardápio. Tudo sai numa sessão de cerca de 2 horas, no sábado ou no domingo. Salada, azeite e fruta entram na hora.</p>
+      <div class="marm-grid">${marm}</div></section>
+    <section class="sec"><h2 class="h3">Ordem da sessão</h2><ol class="passos card">${PLAN.sessao.map(p => `<li><span>${esc(p)}</span></li>`).join('')}</ol></section>
+    <section class="sec"><h2 class="h3">Receitas</h2><div class="recs">${recs}</div></section>
+    <section class="sec"><h2 class="h3">Congelar e reaquecer</h2><div class="card"><ul class="bul">${PLAN.congelar.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div></section>`;
+}
+
+/* ---------- Compras ---------- */
+let limparTimer = null;
+function renderCompras() {
+  const marc = (store.get('compras') || {}).marcados || {};
+  const todos = PLAN.compras.flatMap(g => g.itens);
+  const feitos = todos.filter(i => marc[i.id]).length;
+  const pct = Math.round(feitos / todos.length * 100);
+  const grupos = PLAN.compras.map(g => `<section class="card cgrupo"><h3 class="h3">${esc(g.grupo)}</h3>${g.nota ? `<p class="cnota">${esc(g.nota)}</p>` : ''}<ul class="clist">${g.itens.map(i => `<li><label class="ci" for="c-${i.id}"><input type="checkbox" id="c-${i.id}" data-compra="${i.id}"${marc[i.id] ? ' checked' : ''}><span class="ci-box" aria-hidden="true">${ICON.check}</span><span class="ci-t"><span class="ci-n">${esc(i.nome)}</span>${i.qtd ? `<span class="ci-q">${esc(i.qtd)}</span>` : ''}${i.obs ? `<small>${esc(i.obs)}</small>` : ''}</span></label></li>`).join('')}</ul></section>`).join('');
+  const html = `<section class="block"><p class="eyebrow">Segunda a sábado</p><h2 class="h2">Compras da semana</h2>
+      <p class="lead">Tudo de segunda a sábado: as 12 marmitas, 6 cafés da manhã, 12 lanches e as saladas. O domingo livre não entra.</p>
+      <div class="cbar"><div class="line" aria-hidden="true"><span style="width:${pct}%"></span></div><span class="cbar-t"><b>${feitos}</b> de ${todos.length} na sacola</span></div>
+      <div class="btns"><button type="button" class="btn" id="btn-copiar">Copiar o que falta</button><button type="button" class="btn ghost" id="btn-limpar">Desmarcar tudo</button></div>
+      <textarea id="copia-txt" class="copia" readonly hidden aria-label="Lista de compras para copiar"></textarea></section>
+    ${grupos}
+    <p class="sync" data-sync><i></i><span></span></p>`;
+  keepFocus(() => { $('#v-compras').innerHTML = html; });
+  store.paint();
+}
+function textoFalta() {
+  const marc = (store.get('compras') || {}).marcados || {};
+  const linhas = ['Compras da semana (seg a sáb)'];
+  PLAN.compras.forEach(g => {
+    const its = g.itens.filter(i => !marc[i.id]);
+    if (!its.length) return;
+    linhas.push('', g.grupo.replace(/\s*\(.*\)$/, ''));
+    its.forEach(i => linhas.push(`- ${i.nome}${i.qtd ? ': ' + i.qtd : ''}`));
+  });
+  return linhas.join('\n');
+}
+function copiar() {
+  const txt = textoFalta();
+  const ta = $('#copia-txt');
+  const fallback = () => { ta.value = txt; ta.hidden = false; ta.focus(); ta.select(); toast('Selecione o texto e copie'); };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(() => toast('Lista copiada'), fallback);
+    else fallback();
+  } catch (e) { fallback(); }
+}
+function limpar(btn) {
+  if (!btn.classList.contains('armado')) {
+    btn.classList.add('armado'); btn.textContent = 'Toque de novo para desmarcar';
+    clearTimeout(limparTimer);
+    limparTimer = setTimeout(() => { const b = $('#btn-limpar'); if (b) { b.classList.remove('armado'); b.textContent = 'Desmarcar tudo'; } }, 4000);
+    return;
+  }
+  clearTimeout(limparTimer);
+  store.set('compras', { marcados: {} });
+  renderCompras();
+  toast('Lista desmarcada');
+}
+
+/* ---------- Peso ---------- */
+let apagarArmado = null, apagarTimer = null;
+function graficoPeso(rs, meta) {
+  const u = rs[rs.length - 1], ini = rs[0];
+  if (rs.length < 2) return `<h3 class="h3">Primeiro registro salvo</h3><p class="hint">O gráfico aparece a partir do segundo registro.</p>`;
+  const dif = u.kg - ini.kg;
+  const titulo = dif < 0 ? `Você perdeu ${fmtKg(-dif)} kg desde ${fmtDataCurta(ini.d)}`
+    : dif > 0 ? `Você subiu ${fmtKg(dif)} kg desde ${fmtDataCurta(ini.d)}` : `Peso estável desde ${fmtDataCurta(ini.d)}`;
+  const W = 340, H = 180, L = 36, R = 14, T = 22, B = 24;
+  const xs = rs.map(x => Date.parse(x.d)), ys = rs.map(x => x.kg);
+  let lo = Math.min(...ys), hi = Math.max(...ys);
+  if (meta != null) { lo = Math.min(lo, meta); hi = Math.max(hi, meta); }
+  const faixa = Math.max(hi - lo, 2);
+  const step = [0.5, 1, 2, 5, 10, 20].find(s => faixa / s <= 4) || 20;
+  lo = Math.floor((lo - faixa * 0.06) / step) * step;
+  hi = Math.ceil((hi + faixa * 0.06) / step) * step;
+  const x0 = xs[0], x1 = xs[xs.length - 1];
+  const X = t => L + (t - x0) / (x1 - x0) * (W - L - R);
+  const Y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+  let grade = '';
+  for (let v = lo; v <= hi + 1e-9; v += step) {
+    grade += `<line x1="${L}" x2="${W - R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--line)" stroke-width="1"/><text x="${L - 6}" y="${(Y(v) + 3.5).toFixed(1)}" text-anchor="end" font-size="10.5" fill="var(--ink-2)">${fmtKgEixo(v)}</text>`;
+  }
+  const metaLinha = meta != null
+    ? `<line x1="${L}" x2="${W - R}" y1="${Y(meta).toFixed(1)}" y2="${Y(meta).toFixed(1)}" stroke="var(--ink-2)" stroke-width="1.5" stroke-dasharray="4 4"/><text x="${L + 4}" y="${(Y(meta) - 5).toFixed(1)}" font-size="11" fill="var(--ink-2)">meta ${fmtKg(meta)} kg</text>` : '';
+  const linha = `<polyline points="${rs.map((x, i) => `${X(xs[i]).toFixed(1)},${Y(x.kg).toFixed(1)}`).join(' ')}" fill="none" stroke="var(--b)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const pontos = rs.map((x, i) => { const ult = i === rs.length - 1; return `<circle cx="${X(xs[i]).toFixed(1)}" cy="${Y(x.kg).toFixed(1)}" r="${ult ? 5 : 4}" fill="${ult ? 'var(--b)' : 'var(--surface)'}" stroke="var(--b)" stroke-width="2"><title>${fmtData(x.d)}: ${fmtKg(x.kg)} kg</title></circle>`; }).join('');
+  const rotulo = `<text x="${(W - R).toFixed(1)}" y="${(Y(u.kg) - 10).toFixed(1)}" text-anchor="end" font-size="12" font-weight="700" fill="var(--ink)">${fmtKg(u.kg)} kg</text>`;
+  const eixoX = `<text x="${L}" y="${H - 6}" font-size="10.5" fill="var(--ink-2)">${fmtDataCurta(ini.d)}</text><text x="${W - R}" y="${H - 6}" text-anchor="end" font-size="10.5" fill="var(--ink-2)">${fmtDataCurta(u.d)}</text>`;
+  return `<h3 class="h3">${titulo}</h3><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(titulo)}">${grade}${metaLinha}${linha}${pontos}${rotulo}${eixoX}</svg>`;
+}
+function renderPeso() {
+  const p = pesoState(), rs = p.registros, m = metaAgua(p);
+  const u = rs[rs.length - 1] || null, ini = rs[0] || null;
+  const hojeISO = dateKey(today);
+  let html = `<section class="block"><p class="eyebrow">Acompanhamento</p><h2 class="h2">Peso e água</h2>
+    <p class="lead">Registre o peso uma vez por semana. A meta de água é recalculada pelo último peso.</p></section>
+    <form class="card" id="form-peso" autocomplete="off" novalidate>
+      <h3 class="h3">Peso da semana</h3>
+      <div class="campos">
+        <label class="campo" for="peso-kg"><span>Peso (kg)</span><input id="peso-kg" name="kg" type="text" inputmode="decimal" placeholder="ex.: 97,5"></label>
+        <label class="campo" for="peso-data"><span>Data</span><input id="peso-data" name="d" type="date" value="${hojeISO}" max="${hojeISO}"></label>
+        <button type="submit" class="btn">Salvar</button>
+      </div>
+      <p class="hint">A nutróloga recomenda se pesar só nas consultas, porque uma balança difere da outra. Pesando toda semana, use sempre a mesma balança, no mesmo horário e de preferência em jejum.</p>
+    </form>`;
+  if (u) {
+    const dif = rs.length > 1 ? u.kg - ini.kg : null;
+    const falta = p.meta != null ? u.kg - p.meta : null;
+    html += `<dl class="stats">
+      <div><dt>Peso atual</dt><dd>${fmtKg(u.kg)} kg<small>em ${fmtData(u.d)}</small></dd></div>
+      <div><dt>Desde o início</dt><dd>${dif == null ? '—' : (dif > 0 ? '+' : dif < 0 ? '−' : '') + fmtKg(Math.abs(dif)) + ' kg'}<small>desde ${fmtData(ini.d)}</small></dd></div>
+      <div><dt>Meta de peso</dt><dd>${p.meta != null ? fmtKg(p.meta) + ' kg' : '—'}<small>${falta == null ? 'defina em Metas' : falta > 0 ? 'faltam ' + fmtKg(falta) + ' kg' : 'meta alcançada'}</small></dd></div>
+      <div><dt>Água por dia</dt><dd>${fmtL(m.ml)} L<small>${p.fator} mL por kg, mínimo 2 L</small></dd></div>
+    </dl>
+    <section class="card grafico">${graficoPeso(rs, p.meta)}</section>`;
+  }
+  html += `<form class="card" id="form-metas" autocomplete="off" novalidate>
+      <h3 class="h3">Metas</h3>
+      <div class="campos">
+        <label class="campo" for="meta-kg"><span>Meta de peso (kg, opcional)</span><input id="meta-kg" type="text" inputmode="decimal" value="${p.meta != null ? fmtKg(p.meta) : ''}" placeholder="ex.: 75"></label>
+        <label class="campo" for="fator-agua"><span>Água por kg de peso (mL)</span><input id="fator-agua" type="text" inputmode="numeric" value="${p.fator}"></label>
+        <button type="submit" class="btn ghost">Salvar metas</button>
+      </div>
+      <p class="hint">A regra usual para adultos é de 30 a 35 mL de água por kg de peso (<a href="${esc(PLAN.fontes.agua.url)}" target="_blank" rel="noopener">fonte</a>). A meta nunca fica abaixo dos 2 L da nutróloga. Quem tem doença nos rins ou no coração deve combinar esse valor com o médico.</p>
+    </form>`;
+  if (rs.length) {
+    const desc = rs.slice().reverse();
+    const lista = desc.map((x, i) => {
+      const ant = desc[i + 1];
+      const d = ant ? x.kg - ant.kg : null;
+      const dtxt = d == null ? '' : `${d > 0 ? '+' : d < 0 ? '−' : '±'}${fmtKg(Math.abs(d))}`;
+      const arm = apagarArmado === x.d;
+      return `<li><span class="rd">${fmtData(x.d)}</span><span class="rk">${fmtKg(x.kg)} kg</span>${dtxt ? `<span class="rv">${dtxt}</span>` : ''}<button type="button" class="del${arm ? ' armado' : ''}" id="del-${x.d}" data-del-peso="${x.d}">${arm ? 'Apagar?' : 'Apagar'}</button></li>`;
+    }).join('');
+    html += `<section class="card"><h3 class="h3">Registros</h3><ul class="registros">${lista}</ul></section>`;
+  }
+  html += `<p class="sync" data-sync><i></i><span></span></p>`;
+  keepFocus(() => { $('#v-peso').innerHTML = html; });
+  store.paint();
+}
+function savePeso(mut) {
+  const next = JSON.parse(JSON.stringify(store.get('peso') || {}));
+  mut(next);
+  store.set('peso', next);
+  renderPeso(); renderHoje();
+}
+
+/* ---------- Guia ---------- */
+function renderGuia() {
+  const quadros = PLAN.quadros.map(q => {
+    const lista = q.livre
+      ? `<ul class="qchips">${q.itens.map(i => `<li>${esc(i[0])}</li>`).join('')}</ul>`
+      : `<ul class="qlist">${q.itens.map(i => `<li><span>${esc(i[0])}${i[2] ? `<small>${esc(i[2])}</small>` : ''}</span><span>${esc(i[1])}</span></li>`).join('')}</ul>`;
+    return `<article class="quadro" id="q-${q.id}"><header><span class="qn">${q.id}</span><div><h3>${esc(q.nome)}</h3><p>Substitui ${esc(q.substitui)}${q.id === 'Q7' ? ', à vontade' : ''}.</p></div></header>${lista}${q.nota ? `<p class="qnota">${esc(q.nota)}</p>` : ''}</article>`;
+  }).join('');
+  const regras = PLAN.regras.map(g => `<div class="card"><h3 class="h3">${esc(g.titulo)}</h3><ul class="bul">${g.itens.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('');
+  $('#v-guia').innerHTML = `<section class="block"><p class="eyebrow">Da nutróloga</p><h2 class="h2">Trocas e regras</h2>
+      <div class="jump"><button type="button" data-jump="g-trocas">Trocas</button><button type="button" data-jump="g-macros">Macros</button><button type="button" data-jump="g-regras">Regras</button><button type="button" data-jump="g-proib">Proibido e liberado</button><button type="button" data-jump="g-ajustes">Ajustes e valores</button></div></section>
+    <section class="sec" id="g-trocas"><h2 class="h3">Trocas</h2><p class="lead">Troque um item do cardápio por outro do mesmo quadro, na quantidade indicada. O selo ao lado de cada alimento (Q1, Q2…) diz o quadro.</p>
+      <p class="nao-come"><b>Fora do cardápio e das trocas, porque você não come:</b> ${esc(PLAN.nao_come.join(', ').replace(/, ([^,]*)$/, ' e $1'))}.</p><div class="quadros">${quadros}</div></section>
+    <section class="sec" id="g-macros"><h2 class="h3">Macronutrientes</h2>
+      <p class="lead">Os documentos da nutróloga trazem porções, não metas de macronutrientes. Por isso comparei o cardápio com referências gerais. Quem define as suas metas é ela.</p>
+      <div class="card tabela-wrap"><table class="tabela">
+        <thead><tr><th scope="col">Nutriente e referência</th><th scope="col">Dia A</th><th scope="col">Dia B</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Calorias<small>plano: 1.400 kcal</small></th><td class="n">${fmt(PLAN.dias.A.kcal)} kcal</td><td class="n">${fmt(PLAN.dias.B.kcal)} kcal</td></tr>
+          <tr><th scope="row">Proteína<small>ref.: ${PLAN.ref.prot_g[0]} a ${PLAN.ref.prot_g[1]} g por dia, ou mais de ${PLAN.ref.prot_pct_min}% das calorias</small></th><td class="n">${PLAN.dias.A.macros.prot} g<small>${PLAN.dias.A.macros.pct.prot}%</small></td><td class="n">${PLAN.dias.B.macros.prot} g<small>${PLAN.dias.B.macros.pct.prot}%</small></td></tr>
+          <tr><th scope="row">Carboidratos<small>ref.: ${PLAN.ref.carb_pct[0]} a ${PLAN.ref.carb_pct[1]}% das calorias</small></th><td class="n">${PLAN.dias.A.macros.carb} g<small>${PLAN.dias.A.macros.pct.carb}%</small></td><td class="n">${PLAN.dias.B.macros.carb} g<small>${PLAN.dias.B.macros.pct.carb}%</small></td></tr>
+          <tr><th scope="row">Gorduras<small>ref.: ${PLAN.ref.gord_pct[0]} a ${PLAN.ref.gord_pct[1]}% das calorias</small></th><td class="n">${PLAN.dias.A.macros.gord} g<small>${PLAN.dias.A.macros.pct.gord}%</small></td><td class="n">${PLAN.dias.B.macros.gord} g<small>${PLAN.dias.B.macros.pct.gord}%</small></td></tr>
+          <tr><th scope="row">Fibras<small>ref.: ${PLAN.ref.fibra_min} g ou mais por dia</small></th><td class="n">${PLAN.dias.A.macros.fibra} g</td><td class="n">${PLAN.dias.B.macros.fibra} g</td></tr>
+        </tbody></table></div>
+      <p class="fonte">A faixa de proteína é a usada para emagrecer preservando músculo (<a href="${esc(PLAN.fontes.proteina.url)}" target="_blank" rel="noopener">${esc(PLAN.fontes.proteina.nome)}</a>). As de carboidrato e gordura são as faixas usuais para adultos.</p></section>
+    <section class="sec" id="g-regras"><h2 class="h3">Regras do dia a dia</h2><div class="regras">${regras}</div></section>
+    <section class="sec" id="g-proib"><h2 class="h3">Proibido e liberado</h2><div class="pl">
+      <div class="card"><h3 class="h3">Proibido</h3><ul class="qchips chips-p">${PLAN.proibido.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
+      <div class="card"><h3 class="h3">Liberado</h3><ul class="qchips chips-l">${PLAN.liberado.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div></div></section>
+    <section class="sec" id="g-ajustes"><h2 class="h3">Ajustes e valores</h2><div class="card"><ul class="bul">${PLAN.ajustes.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
+      <p class="fonte">As kcal são estimativas da <a href="${esc(PLAN.fontes.taco.url)}" target="_blank" rel="noopener">${esc(PLAN.fontes.taco.nome)}</a> e de rótulos (leite desnatado, goma de tapioca, brocolini, cogumelo). Variações de até 10% são normais.</p></section>`;
+}
+
+/* ---------- Ações ---------- */
+function irQuadro(q) {
+  go('guia');
+  requestAnimationFrame(() => {
+    const el = document.getElementById('q-' + q);
+    if (!el) return;
+    el.scrollIntoView({ behavior: reduzMovimento() ? 'auto' : 'smooth', block: 'start' });
+    el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  });
+}
+function irPara(alvo) {
+  if (alvo === 'sopa') {
+    go('preparo');
+    requestAnimationFrame(() => { const d = $('#rec-sopa'); if (d) { d.open = true; d.scrollIntoView({ behavior: reduzMovimento() ? 'auto' : 'smooth', block: 'start' }); } });
+  } else if (alvo === 'trocas' || alvo === 'macros') {
+    go('guia');
+    requestAnimationFrame(() => { const s = $('#g-' + alvo); if (s) s.scrollIntoView({ behavior: reduzMovimento() ? 'auto' : 'smooth', block: 'start' }); });
+  } else if (VIEWS.includes(alvo)) go(alvo);
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('button');
+  if (!t) return;
+  if (t.matches('[data-set-dia]')) {
+    const v = t.dataset.setDia, prog = DOW_DIA[today.getDay()];
+    patchHoje(s => { if (v === prog) delete s.dia; else s.dia = v; });
+  } else if (t.matches('.check[data-meal]')) {
+    const id = t.dataset.meal;
+    patchHoje(s => { s.feitos = s.feitos || {}; if (s.feitos[id]) delete s.feitos[id]; else s.feitos[id] = true; });
+  } else if (t.matches('.copo[data-copo]')) {
+    const n = Number(t.dataset.copo);
+    patchHoje(s => { const cur = Number(s.agua) || 0; s.agua = cur === n ? n - 1 : n; });
+  } else if (t.matches('.q[data-q]')) {
+    irQuadro(t.dataset.q);
+  } else if (t.matches('[data-goto]')) {
+    irPara(t.dataset.goto);
+  } else if (t.matches('[data-ver]')) {
+    verDia = t.dataset.ver; renderCardapio();
+  } else if (t.matches('[data-jump]')) {
+    const el = document.getElementById(t.dataset.jump);
+    if (el) el.scrollIntoView({ behavior: reduzMovimento() ? 'auto' : 'smooth', block: 'start' });
+  } else if (t.matches('[data-del-peso]')) {
+    const d = t.dataset.delPeso;
+    if (apagarArmado !== d) {
+      apagarArmado = d; clearTimeout(apagarTimer);
+      apagarTimer = setTimeout(() => { apagarArmado = null; renderPeso(); }, 4000);
+      renderPeso();
+      return;
+    }
+    clearTimeout(apagarTimer); apagarArmado = null;
+    savePeso(s => { s.registros = (Array.isArray(s.registros) ? s.registros : []).filter(x => x && x.d !== d); });
+    toast('Registro apagado');
+  } else if (t.id === 'btn-copiar') {
+    copiar();
+  } else if (t.id === 'btn-limpar') {
+    limpar(t);
+  } else if (t.id === 'instalar-ok') {
+    try { localStorage.setItem('plano1400:instalar-ok', '1'); } catch (e) { /* sem armazenamento */ }
+    renderHoje();
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (!t.matches || !t.matches('[data-compra]')) return;
+  const cur = store.get('compras') || {};
+  const marcados = Object.assign({}, cur.marcados || {});
+  if (t.checked) marcados[t.dataset.compra] = true; else delete marcados[t.dataset.compra];
+  store.set('compras', { marcados });
+  renderCompras();
+});
+
+document.addEventListener('submit', e => {
+  const f = e.target;
+  if (f.id === 'form-peso') {
+    e.preventDefault();
+    const kg = num($('#peso-kg').value);
+    const d = $('#peso-data').value || dateKey(today);
+    if (!(kg >= 30 && kg <= 300)) { toast('Digite o peso em kg, por exemplo 97,5'); $('#peso-kg').focus(); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d > dateKey(today)) { toast('Escolha uma data até hoje'); return; }
+    savePeso(s => {
+      const rs = (Array.isArray(s.registros) ? s.registros : []).filter(x => x && x.d !== d);
+      rs.push({ d, kg: Math.round(kg * 10) / 10 });
+      rs.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0));
+      s.registros = rs;
+    });
+    toast(`Peso salvo: ${fmtKg(kg)} kg`);
+  } else if (f.id === 'form-metas') {
+    e.preventDefault();
+    const metaTxt = $('#meta-kg').value.trim();
+    const meta = metaTxt === '' ? null : num(metaTxt);
+    const fator = num($('#fator-agua').value);
+    if (meta !== null && !(meta >= 30 && meta <= 300)) { toast('Digite a meta em kg, por exemplo 75'); return; }
+    if (!(fator >= 20 && fator <= 50)) { toast('Use de 20 a 50 mL por kg'); return; }
+    savePeso(s => { if (meta === null) delete s.meta; else s.meta = Math.round(meta * 10) / 10; s.fator = Math.round(fator); });
+    toast('Metas salvas');
+  }
+});
+
+/* ---------- Virada do dia com a página aberta ---------- */
+function checarVirada() {
+  const agora = new Date();
+  const k = 'dia-' + dateKey(agora);
+  if (k === todayKey) return;
+  store.unwatch(todayKey);
+  today = agora; todayKey = k;
+  store.watch(todayKey);
+  verDia = null;
+  renderHoje(); renderCardapio();
+}
+setInterval(checarVirada, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checarVirada(); });
+
+store.onChange = k => {
+  if (k === todayKey) renderHoje();
+  else if (k === 'compras') renderCompras();
+  else if (k === 'peso') { renderPeso(); renderHoje(); }
+};
+renderHoje(); renderCardapio(); renderPreparo(); renderCompras(); renderPeso(); renderGuia();
+show(location.hash.slice(1) || 'hoje', { keepScroll: true });
+store.init(() => [todayKey, 'compras', 'peso']);
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+}
+</script>
+</body>
+</html>
