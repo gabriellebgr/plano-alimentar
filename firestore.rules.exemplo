@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Troque pelos e-mails reais, em letras minúsculas.
+    function dona() {
+      return request.auth != null && request.auth.token.email == 'seu-email@exemplo.com';
+    }
+    function daCasa() {
+      return dona() || (request.auth != null && request.auth.token.email in [
+        'pessoa1@exemplo.com',
+        'pessoa2@exemplo.com'
+      ]);
+    }
+    // Lista de compras: todo mundo da casa lê e escreve.
+    match /lista/{doc=**} {
+      allow read, write: if daCasa();
+    }
+    // Só a dona consegue ler este documento; é assim que o app sabe quem vê o plano inteiro.
+    match /acesso/dona {
+      allow read: if dona();
+    }
+  }
+}

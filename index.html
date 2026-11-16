@@ -13,6 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#F2F4F0" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#101411" media="(prefers-color-scheme: dark)">
+<script src="firebase-config.js"></script>
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Plano Alimentar 1.400</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -331,6 +332,25 @@ main{ padding-block:18px 48px; }
 .tabela tbody th{ font-weight:600; width:55%; }
 .tabela small{ display:block; font-size:12px; font-weight:400; line-height:1.35; color:var(--ink-2); }
 .tabela td.n{ font-weight:600; }
+
+/* Lista da casa: login e modos (só no app) */
+body[data-modo="carregando"] .tabs-wrap, body[data-modo="login"] .tabs-wrap, body[data-modo="casa"] .tabs-wrap,
+body[data-modo="carregando"] #hdr-badge, body[data-modo="login"] #hdr-badge, body[data-modo="casa"] #hdr-badge,
+body[data-modo="carregando"] .scale, body[data-modo="login"] .scale, body[data-modo="casa"] .scale{ display:none; }
+@media (max-width:719px){
+  body[data-modo="carregando"] main, body[data-modo="login"] main, body[data-modo="casa"] main{ padding-bottom:calc(32px + env(safe-area-inset-bottom,0px)) !important; }
+}
+.entrar{ width:100%; max-width:440px; margin:20px auto 0; display:flex; flex-direction:column; gap:12px; }
+.entrar form{ display:flex; flex-direction:column; gap:12px; }
+.erro{ margin:0; padding:10px 12px; border-radius:10px; background:var(--danger-soft); color:var(--danger); font-size:13.5px; font-weight:600; }
+.casa-bar{ display:flex; align-items:center; justify-content:space-between; gap:8px 12px; flex-wrap:wrap; font-size:13px; color:var(--ink-2); }
+.casa-bar b{ color:var(--ink); font-weight:600; overflow-wrap:anywhere; }
+.campo.curto{ flex:0 1 120px; }
+.ci-row{ display:flex; align-items:flex-start; gap:8px; }
+.ci-row .ci{ flex:1 1 auto; min-width:0; }
+.x-apagar{ flex:0 0 auto; margin-top:8px; min-height:32px; padding:3px 9px; border:1px solid var(--line); border-radius:8px; background:none; font-size:12px; font-weight:600; color:var(--ink-2); cursor:pointer; }
+.x-apagar.armado{ background:var(--danger); border-color:var(--danger); color:var(--surface); }
+.vazio{ margin:6px 0 0; font-size:13.5px; color:var(--ink-2); }
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{ transition:none !important; animation:none !important; scroll-behavior:auto !important; }
 }
@@ -342,7 +362,7 @@ main{ padding-block:18px 48px; }
     <div class="brand">
       <span class="scale" aria-hidden="true">1.400<small>kcal</small></span>
       <div class="brand-t">
-        <h1>Plano alimentar</h1>
+        <h1 id="hdr-titulo">Plano alimentar</h1>
         <p id="hdr-data">Dia A e Dia B alternados, domingo livre</p>
       </div>
     </div>
@@ -361,6 +381,7 @@ main{ padding-block:18px 48px; }
 </header>
 
 <main class="wrap" id="main">
+  <section class="view" id="v-entrar" aria-label="Entrar" hidden></section>
   <section class="view" id="v-hoje" aria-label="Hoje"></section>
   <section class="view" id="v-cardapio" aria-label="Cardápio" hidden></section>
   <section class="view" id="v-preparo" aria-label="Preparo" hidden></section>
@@ -376,6 +397,9 @@ main{ padding-block:18px 48px; }
 const PLAN = {"versao":"2026-11-15c","itens":{"pao_frances":{"nome":"Pão francês sem miolo","medida":"1 unidade","peso":"30 g","q":"Q1","kcal":90,"prot":2.4,"gord":0.9,"carb":17.6,"fibra":0.7},"tapioca":{"nome":"Tapioca","medida":"3 col. sopa rasas de goma","peso":"35 g","q":"Q1","kcal":84,"prot":0.0,"gord":0.0,"carb":21.0,"fibra":0.0},"queijo_minas":{"nome":"Queijo minas frescal","medida":"1 fatia média","peso":"30 g","q":"Q2","kcal":79,"prot":5.2,"gord":6.1,"carb":1.0,"fibra":0.0},"leite":{"nome":"Leite desnatado, puro ou com café","medida":"1 copo","peso":"200 mL","q":"Q3","kcal":70,"prot":6.8,"gord":0.2,"carb":9.8,"fibra":0.0},"cafe":{"nome":"Café ou chá com stevia","medida":"à vontade","peso":"","q":null,"kcal":0,"prot":0,"gord":0,"carb":0,"fibra":0},"melancia":{"nome":"Melancia","medida":"1 fatia média","peso":"200 g","q":"Q9","kcal":66,"prot":1.8,"gord":0.0,"carb":16.2,"fibra":0.2},"kiwi":{"nome":"Kiwi","medida":"1 pequeno","peso":"70 g","q":"Q9","kcal":36,"prot":0.9,"gord":0.4,"carb":8.1,"fibra":1.9},"abacaxi":{"nome":"Abacaxi","medida":"1 fatia","peso":"120 g","q":"Q9","kcal":58,"prot":1.1,"gord":0.1,"carb":14.8,"fibra":1.2},"pera":{"nome":"Pera","medida":"½ média","peso":"≈90 g","q":"Q9","kcal":48,"prot":0.5,"gord":0.1,"carb":12.6,"fibra":2.7},"morango":{"nome":"Morango","medida":"5 unidades","peso":"≈60 g","q":"Q9","kcal":18,"prot":0.5,"gord":0.2,"carb":4.1,"fibra":1.0},"uva":{"nome":"Uva","medida":"10 bagos","peso":"≈50 g","q":"Q9","kcal":27,"prot":0.3,"gord":0.1,"carb":6.8,"fibra":0.5},"iogurte":{"nome":"Iogurte natural desnatado","medida":"1 pote","peso":"170 g","q":"Q3","kcal":70,"prot":6.5,"gord":0.5,"carb":9.9,"fibra":0.0},"castanha":{"nome":"Castanha-do-pará","medida":"2 unidades","peso":"8 g","q":null,"kcal":51,"prot":1.2,"gord":5.1,"carb":1.2,"fibra":0.6},"arroz75":{"nome":"Arroz","medida":"3 col. sopa cheias","peso":"75 g","q":"Q5","kcal":96,"prot":1.9,"gord":0.1,"carb":21.1,"fibra":1.2},"arroz50":{"nome":"Arroz","medida":"2 col. sopa cheias","peso":"50 g","q":"Q5","kcal":64,"prot":1.2,"gord":0.1,"carb":14.1,"fibra":0.8},"feijao":{"nome":"Feijão carioca","medida":"1 concha pequena","peso":"80 g","q":"Q4","kcal":61,"prot":3.8,"gord":0.4,"carb":10.9,"fibra":6.8},"frango_grelhado":{"nome":"Frango grelhado","medida":"1 filé (160 g cru)","peso":"≈115 g","q":"Q6","kcal":206,"prot":34.5,"gord":6.3,"carb":0.5,"fibra":0.1},"almondegas":{"nome":"Almôndegas ao sugo","medida":"3 unidades médias, com molho","peso":"≈200 g","q":"Q6","kcal":263,"prot":33.3,"gord":10.8,"carb":7.8,"fibra":2.4},"picadinho":{"nome":"Picadinho de patinho","medida":"3 col. sopa bem cheias, com caldo","peso":"≈105 g","q":"Q6","kcal":249,"prot":33.8,"gord":9.9,"carb":4.9,"fibra":1.4},"frango_desfiado":{"nome":"Frango desfiado com cúrcuma","medida":"3 col. sopa bem cheias","peso":"≈100 g","q":"Q6","kcal":221,"prot":32.4,"gord":7.5,"carb":4.7,"fibra":1.3},"brocolini_cf":{"nome":"Brocolini e couve-flor no vapor","medida":"vegetal A, pode repetir","peso":"≈90 g","q":"Q7","kcal":26,"prot":2.2,"gord":0.2,"carb":4.6,"fibra":2.2},"repolho":{"nome":"Repolho refogado","medida":"vegetal A, pode repetir","peso":"≈80 g","q":"Q7","kcal":29,"prot":1.1,"gord":0.9,"carb":5.0,"fibra":2.2},"abobora":{"nome":"Abóbora cabotiá assada","medida":"4 col. sopa cheias","peso":"100 g","q":"Q8","kcal":55,"prot":2.1,"gord":1.4,"carb":10.5,"fibra":2.8},"cenoura_vagem":{"nome":"Cenoura e vagem no vapor","medida":"4 col. sopa cheias","peso":"100 g","q":"Q8","kcal":31,"prot":1.6,"gord":0.2,"carb":6.8,"fibra":2.9},"salada":{"nome":"Salada crua, com limão ou vinagre","medida":"à vontade · ref.: alface, tomate, pepino","peso":"≈120 g","q":"Q7","kcal":15,"prot":1.3,"gord":0.2,"carb":3.0,"fibra":1.6}},"dias":{"A":{"nome":"Dia A","quando":"segunda, quarta e sexta","kcal":1399,"prot":111,"macros":{"prot":111,"carb":170,"gord":34,"fibra":30,"pct":{"prot":31,"carb":47,"gord":22},"status":{"prot":"dentro","carb":"dentro","gord":"dentro","fibra":"dentro"}},"refeicoes":[{"id":"cafe","nome":"Café da manhã","hora":"7h30","kcal":239,"marmita":null,"itens":["pao_frances","queijo_minas","leite","cafe"],"hora_itens":[],"sobremesa":null},{"id":"lanche1","nome":"Lanche das 10h","hora":"10h","kcal":102,"marmita":null,"itens":["melancia","kiwi"],"hora_itens":[],"sobremesa":null},{"id":"almoco","nome":"Almoço","hora":"12h30","kcal":517,"marmita":"A1","itens":["arroz75","feijao","frango_grelhado","brocolini_cf","abobora"],"hora_itens":["salada"],"sobremesa":"abacaxi"},{"id":"lanche2","nome":"Lanche da tarde","hora":"15h30","kcal":139,"marmita":null,"itens":["iogurte","morango","castanha"],"hora_itens":[],"sobremesa":null},{"id":"jantar","nome":"Jantar","hora":"19h","kcal":402,"marmita":"A2","itens":["arroz50","almondegas","repolho","cenoura_vagem"],"hora_itens":["salada"],"sobremesa":null}]},"B":{"nome":"Dia B","quando":"terça, quinta e sábado","kcal":1415,"prot":106,"macros":{"prot":106,"carb":182,"gord":33,"fibra":30,"pct":{"prot":29,"carb":50,"gord":21},"status":{"prot":"dentro","carb":"dentro","gord":"dentro","fibra":"dentro"}},"refeicoes":[{"id":"cafe","nome":"Café da manhã","hora":"7h30","kcal":233,"marmita":null,"itens":["tapioca","queijo_minas","leite","cafe"],"hora_itens":[],"sobremesa":null},{"id":"lanche1","nome":"Lanche das 10h","hora":"10h","kcal":106,"marmita":null,"itens":["abacaxi","pera"],"hora_itens":[],"sobremesa":null},{"id":"almoco","nome":"Almoço","hora":"12h30","kcal":544,"marmita":"B1","itens":["arroz75","feijao","picadinho","brocolini_cf","cenoura_vagem"],"hora_itens":["salada"],"sobremesa":"melancia"},{"id":"lanche2","nome":"Lanche da tarde","hora":"15h30","kcal":148,"marmita":null,"itens":["iogurte","uva","castanha"],"hora_itens":[],"sobremesa":null},{"id":"jantar","nome":"Jantar","hora":"19h","kcal":384,"marmita":"B2","itens":["arroz50","frango_desfiado","repolho","abobora"],"hora_itens":["salada"],"sobremesa":null}]}},"marmitas":[{"codigo":"A1","refeicao":"Almoço","dia":"A","qtd":3,"itens":["arroz75","feijao","frango_grelhado","brocolini_cf","abobora"],"kcal":444},{"codigo":"A2","refeicao":"Jantar","dia":"A","qtd":3,"itens":["arroz50","almondegas","repolho","cenoura_vagem"],"kcal":387},{"codigo":"B1","refeicao":"Almoço","dia":"B","qtd":3,"itens":["arroz75","feijao","picadinho","brocolini_cf","cenoura_vagem"],"kcal":463},{"codigo":"B2","refeicao":"Jantar","dia":"B","qtd":3,"itens":["arroz50","frango_desfiado","repolho","abobora"],"kcal":369}],"receitas":[{"id":"arroz","nome":"Arroz","rende":"≈750 g: 6 porções de 75 g + 6 de 50 g","para":["A1","A2","B1","B2"],"ing":["250 g de arroz cru (1¼ xícara)","2½ xícaras de água fervente","¼ de cebola picada (30 g)","1 dente de alho","1 col. chá de azeite","sal"],"passos":["Refogue a cebola e o alho no azeite, junte o arroz e mexa 1 minuto.","Junte a água e o sal, tampe e cozinhe em fogo baixo por 15 a 18 min.","Arroz integral: cerca de 3½ xícaras de água e 35 a 40 min."]},{"id":"feijao","nome":"Feijão magro","rende":"≈8 conchas pequenas (usa 6)","para":["A1","B1"],"ing":["150 g de feijão carioca cru (¾ xícara)","3 xícaras de água","1 folha de louro","¼ de cebola (30 g)","2 dentes de alho","sal"],"passos":["Se der, deixe de molho de 8 a 12 h e descarte a água.","Panela de pressão com a água e o louro: 25 a 30 min depois de pegar pressão.","Refogue a cebola e o alho num fio de água (sem óleo), junte o feijão e o sal e apure 10 min.","Sem bacon, linguiça ou carne de porco. A sobra congela."]},{"id":"frango_grelhado","nome":"Frango grelhado","rende":"3 filés","para":["A1"],"ing":["3 filés de peito de 160 g (480 g), sem pele e sem gordura","suco de 1 limão","2 dentes de alho","½ col. chá de cúrcuma","½ col. chá de páprica doce","pimenta-do-reino e sal","1 col. chá de azeite"],"passos":["Tempere os filés com limão, alho, cúrcuma, páprica, pimenta e sal; deixe 30 min (ou de véspera).","Grelhe em frigideira antiaderente com o azeite, 4 a 5 min de cada lado, até não ficar rosado por dentro.","Na airfryer: 200 °C por 15 a 18 min, virando na metade."]},{"id":"almondegas","nome":"Almôndegas ao sugo","rende":"9 almôndegas (3 porções)","para":["A2"],"ing":["400 g de patinho moído","1 ovo","¼ de cebola ralada (30 g)","1 dente de alho amassado","cheiro-verde e sal","Molho: 4 tomates maduros (400 g) batidos","½ cebola (60 g) e 2 dentes de alho","2 col. chá de azeite, orégano e sal"],"passos":["Misture a carne, o ovo, a cebola, o alho, o cheiro-verde e o sal; faça 9 bolinhas.","Asse a 200 °C por 20 a 25 min, sem fritar.","Molho: refogue cebola e alho no azeite, junte os tomates, orégano e sal e cozinhe 15 a 20 min.","Junte as almôndegas ao molho por mais 5 min."]},{"id":"picadinho","nome":"Picadinho de patinho","rende":"3 porções","para":["B1"],"ing":["450 g de patinho em cubos de 2 cm (peça ao açougue)","1 cebola média picada (90 g)","3 dentes de alho","1 tomate grande picado (150 g)","2 col. chá de azeite","1 folha de louro","½ col. chá de páprica, sal e cheiro-verde","1 xícara de água"],"passos":["Na panela de pressão aberta, sele a carne no azeite em 2 levas.","Junte cebola e alho, depois tomate, louro, páprica, sal e a água.","Pressão por 20 min. Abra e apure o caldo por 5 min; finalize com cheiro-verde."]},{"id":"frango_desfiado","nome":"Frango desfiado com cúrcuma","rende":"3 porções","para":["B2"],"ing":["435 g de peito de frango sem pele","1 folha de louro e sal","1 cebola média (90 g)","2 dentes de alho","1 tomate grande picado (150 g)","½ col. chá de cúrcuma","2 col. chá de azeite","cheiro-verde"],"passos":["Cozinhe o frango numa panela comum com água, louro e sal por 20 a 25 min. Desfie com dois garfos e guarde ½ concha do caldo.","Refogue cebola e alho no azeite, junte tomate, cúrcuma, o frango e o caldo; 5 min.","Finalize com cheiro-verde."]},{"id":"brocolini_cf","nome":"Brocolini e couve-flor no vapor","rende":"6 porções de ≈90 g","para":["A1","B1"],"ing":["270 g de brocolini (2 bandejas), sem as pontas duras dos talos","260 g de floretes de couve-flor"],"passos":["Vapor: couve-flor por 4 a 5 min, brocolini por 3 a 4 min, ainda firmes.","Passe em água gelada e escorra bem."]},{"id":"cenoura_vagem","nome":"Cenoura e vagem no vapor","rende":"6 porções de 100 g","para":["A2","B1"],"ing":["330 g de cenoura em rodelas","290 g de vagem em pedaços de 3 cm"],"passos":["Vapor: cenoura por 8 a 10 min, vagem por 5 a 6 min.","Passe em água gelada e escorra bem."]},{"id":"abobora","nome":"Abóbora cabotiá assada","rende":"6 porções de 100 g","para":["A1","B2"],"ing":["750 g de abóbora descascada em cubos de 2 a 3 cm","1 col. chá de azeite","sal","alecrim ou páprica"],"passos":["Espalhe numa assadeira grande, sem amontoar (se precisar, use duas).","Asse a 200 °C por 25 a 30 min, virando na metade."]},{"id":"repolho","nome":"Repolho refogado","rende":"6 porções de ≈80 g","para":["A2","B2"],"ing":["½ repolho pequeno fatiado fino (600 g)","½ cebola (60 g)","2 dentes de alho","1 col. chá de azeite","sal e uma pitada de cúrcuma"],"passos":["Fogo alto, panela destampada: refogue cebola e alho, junte o repolho e mexa por 6 a 8 min.","Tire ainda firme: ele amolece ao reaquecer."]},{"id":"sopa","nome":"Sopa do plano (opcional, no lugar do jantar)","rende":"1 prato","para":[],"extra":"≈157 kcal e 8 g de proteína","ing":["80 g de couve-flor","50 g de vagem","50 g de repolho","50 g de cogumelos","1 cenoura pequena (80 g)","1 batata pequena (100 g)","cebola, alho e ervas","500 mL de água"],"passos":["Cozinhe tudo na água com sal por 20 min. Pode bater metade para engrossar.","Desengordurada e sem carne, arroz ou macarrão, como pede o plano. Congela bem."]}],"sessao":["Na véspera: deixe o feijão de molho e, se quiser, já tempere o frango para grelhar.","Ligue o forno a 200 °C e ponha o feijão na panela de pressão.","Corte os legumes e a cebola. Misture e enrole as 9 almôndegas.","Forno: abóbora (25 a 30 min) e almôndegas (20 a 25 min), em assadeiras separadas.","Panela comum: frango para desfiar (20 a 25 min). Outra panela: molho de tomate (15 a 20 min).","Fogão: arroz (15 a 18 min).","Feijão pronto: use a pressão para o picadinho (20 min).","Vapor: couve-flor e brocolini, depois cenoura e vagem. Água gelada e escorrer.","Frigideira: frango grelhado e, por último, o repolho.","Finalize: almôndegas no molho (5 min), tempere o feijão, refogue o frango desfiado e apure o caldo do picadinho.","Espalhe tudo em assadeiras para esfriar, monte as 12 marmitas pesando cada item, etiquete e congele."],"congelar":["Esfrie rápido: espalhe as preparações em assadeiras rasas e não deixe nada mais de 2 h fora da geladeira.","Potes de 750 mL que vão ao freezer e ao micro-ondas. Deixe 1 cm livre no topo: caldo e molho expandem.","Etiqueta de fita crepe na tampa: código e data do preparo (ex.: B1 · 15/11). No freezer, até 30 dias.","Descongele na geladeira: tire as marmitas do dia seguinte na noite anterior. Esqueceu? Função descongelar do micro-ondas.","Reaqueça com a tampa entreaberta: 3 a 4 min se descongelada, 6 a 8 min em potência média se congelada, mexendo na metade. Uma colher de água no arroz evita ressecar.","Depois de descongelada, consuma em até 24 h e não congele de novo.","Salada, frutas, iogurte e café da manhã não vão ao freezer. Folhas lavadas e secas, num pote com papel-toalha, duram 4 a 5 dias."],"compras":[{"grupo":"Açougue","nota":null,"itens":[{"id":"frango","nome":"Filé de peito de frango","qtd":"≈950 g","obs":"3 filés de 160 g para grelhar + 435 g para desfiar"},{"id":"patinho","nome":"Patinho em cubos","qtd":"450 g","obs":"peça para cortar em cubos de 2 cm"},{"id":"moido","nome":"Patinho moído","qtd":"400 g","obs":"para as almôndegas"},{"id":"ovo","nome":"Ovo","qtd":"1","obs":"para as almôndegas"}]},{"grupo":"Legumes e verduras","nota":null,"itens":[{"id":"abobora","nome":"Abóbora cabotiá","qtd":"1 pedaço de ≈1,1 kg","obs":"rende 750 g descascada"},{"id":"brocolini","nome":"Brocolini","qtd":"2 bandejas","obs":"≈270 g depois de aparar"},{"id":"couveflor","nome":"Couve-flor","qtd":"½ unidade média","obs":"260 g de floretes"},{"id":"cenoura","nome":"Cenoura","qtd":"3 médias","obs":"330 g"},{"id":"vagem","nome":"Vagem","qtd":"300 g","obs":null},{"id":"repolho","nome":"Repolho","qtd":"½ pequeno","obs":"≈600 g"},{"id":"tomate","nome":"Tomate","qtd":"11 médios","obs":"≈1,4 kg: saladas, molho e refogados"},{"id":"alface","nome":"Alface crespa","qtd":"2 pés","obs":null},{"id":"pepino","nome":"Pepino japonês","qtd":"2","obs":null},{"id":"cebola","nome":"Cebola","qtd":"4 médias","obs":null},{"id":"alho","nome":"Alho","qtd":"1 cabeça grande","obs":null},{"id":"limao","nome":"Limão","qtd":"3","obs":"frango e salada"},{"id":"cheiro","nome":"Cheiro-verde","qtd":"1 maço","obs":null}]},{"grupo":"Frutas e castanhas","nota":"Morango e melancia em pedaço duram 4 a 5 dias. Se der, compre em duas vezes; morango lavado e seco também pode ir ao freezer e vai bem com o iogurte.","itens":[{"id":"melancia","nome":"Melancia","qtd":"1 pedaço de ≈2 kg","obs":"6 fatias de 200 g"},{"id":"abacaxi","nome":"Abacaxi","qtd":"1 médio","obs":"6 fatias de 120 g"},{"id":"kiwi","nome":"Kiwi","qtd":"3","obs":null},{"id":"pera","nome":"Pera","qtd":"2","obs":"usa 1½"},{"id":"morango","nome":"Morango","qtd":"1 bandeja","obs":"15 unidades"},{"id":"uva","nome":"Uva","qtd":"1 cacho pequeno","obs":"≈150 g, 30 bagos"},{"id":"castanha","nome":"Castanha-do-pará","qtd":"1 pacote pequeno","obs":"12 unidades, ≈50 g"}]},{"grupo":"Laticínios e padaria","nota":null,"itens":[{"id":"leite","nome":"Leite desnatado","qtd":"2 caixas de 1 L","obs":"usa 1,2 L"},{"id":"iogurte","nome":"Iogurte natural desnatado","qtd":"6 potes de 170 g","obs":null},{"id":"queijo","nome":"Queijo minas frescal","qtd":"1 peça de ≈200 g","obs":"usa 180 g"},{"id":"pao","nome":"Pão francês","qtd":"3","obs":"congele e aqueça na hora"},{"id":"goma","nome":"Goma de tapioca","qtd":"1 pacote","obs":"usa 105 g"}]},{"grupo":"Despensa (confira o que já tem)","nota":null,"itens":[{"id":"arroz","nome":"Arroz branco ou integral","qtd":"250 g","obs":null},{"id":"feijao","nome":"Feijão carioca","qtd":"150 g","obs":null},{"id":"azeite","nome":"Azeite ou óleo de coco, para cozinhar","qtd":"≈50 mL","obs":"1 a 2 col. chá por receita"},{"id":"stevia","nome":"Stevia, café e chás","qtd":null,"obs":null},{"id":"vinagre","nome":"Vinagre","qtd":null,"obs":"para a salada"},{"id":"temperos","nome":"Temperos naturais","qtd":null,"obs":"cúrcuma, páprica doce, orégano, louro, alecrim, pimenta e sal"}]},{"grupo":"Para as marmitas","nota":null,"itens":[{"id":"potes","nome":"Potes de 750 mL (freezer e micro-ondas)","qtd":"12","obs":null},{"id":"fita","nome":"Fita crepe e caneta","qtd":null,"obs":"para as etiquetas"}]}],"quadros":[{"id":"Q1","nome":"Pães","substitui":"o pão francês sem miolo do café da manhã","itens":[["Pão árabe","1 médio"],["Pão integral","1 fatia"],["Pão glúten","1 fatia"],["Pão de forma","1 fatia"],["Pão de forma diet","2 fatias"],["Pão de centeio","1 fatia"],["Pão de graham","1 fatia"],["Pão de aveia","1 fatia"],["Pão de batata-doce","1 fatia"],["Pão de aipim","1 fatia"],["Tapioca","1 porção"]]},{"id":"Q2","nome":"Queijos e pastas","substitui":"a fatia de queijo minas","itens":[["Tofu (queijo de soja)","2 col. sopa cheias"],["Ricota light","1 fatia grossa"],["Requeijão light","1 col. sopa cheia"],["Catupiry light","1 fatia fina"],["Polenguinho light","1 unidade"],["Cottage","2 col. sopa cheias"],["Manteiga","2 pontas de faca"],["Geleia de frutas diet","2 col. sopa rasas"]]},{"id":"Q3","nome":"Leite, iogurtes e sucos","substitui":"o copo de leite; nos lanches, vale como 1 das 2 unidades","itens":[["Suco de fruta","1 copo (200 mL)"],["Iogurte natural desnatado","1 copo (200 mL)"],["Coalhada","1 copo (200 mL)"],["Iogurte com sabor (light, 0% gordura)","1 copo (200 mL)"],["Leite em pó desnatado","2 col. sopa cheias"],["Queijo minas","1 fatia média"]]},{"id":"Q4","nome":"Leguminosas","substitui":"a concha pequena de feijão","itens":[["Lentilha cozida","2 col. sopa rasas"],["Soja","2 col. sopa"],["Grão-de-bico","2 col. sopa"],["Quinoa","3 col. sopa"]]},{"id":"Q5","nome":"Carboidratos","substitui":"o arroz, colher por colher","nota":"Leitura do quadro: cada medida vale 1 colher de arroz (é o que bate em calorias). No almoço, com 3 colheres de arroz, use 3 medidas. Se a nutróloga orientar diferente, siga ela.","itens":[["Angu (polenta, fubá)","1 col. sopa"],["Batata inglesa cozida","1 unidade pequena"],["Farinha de mandioca","1 col. sobremesa"],["Macarrão cozido","1 col. sopa cheia"],["Nhoque","1 col. sopa"],["Panqueca","1 unidade pequena"],["Pirão","1 col. sopa"],["Purê de batata","1 col. sopa"],["Farofa","1 col. sobremesa"],["Aipim ou inhame cozido","1 unidade pequena"],["Outros tipos de batata","1 unidade pequena"]]},{"id":"Q6","nome":"Carnes e ovos","substitui":"a porção de carne do almoço e do jantar","itens":[["Bife de chapa","1 unidade média"],["Almôndegas","3 unidades médias"],["Carne moída","3 col. sopa"],["Picadinho de carne","3 col. sopa"],["Carne assada","2 fatias finas"],["Bife rolê","2 unidades pequenas"],["Frango","2 fatias finas"],["Peru","3 fatias finas"],["Frango desfiado","3 col. sopa"],["Salmão ou atum","1 posta média","até 2 vezes por semana"],["Ovo","1 unidade"],["Dobradinha","1 pires de chá"]]},{"id":"Q7","nome":"Vegetais A","substitui":"os vegetais à vontade","livre":true,"itens":[["Acelga"],["Agrião"],["Aipo"],["Alface"],["Alho"],["Almeirão"],["Berinjela"],["Bertalha"],["Brocolini"],["Cebola"],["Chicória"],["Couve"],["Couve-flor"],["Endívia"],["Espinafre"],["Maxixe"],["Mostarda"],["Pepino"],["Repolho"],["Taioba"],["Tomate"]]},{"id":"Q8","nome":"Vegetais B","substitui":"as 4 col. sopa de vegetal B","livre":true,"itens":[["Abóbora"],["Cenoura"],["Chuchu"],["Nabo"],["Vagem"],["1 prato de sopa"]]},{"id":"Q9","nome":"Frutas","substitui":"cada fruta (2 nos lanches, 1 de sobremesa)","itens":[["Gelatina diet ou light","1 porção"],["Abacaxi","1 fatia"],["Ameixa","2 médias"],["Caju","2 unidades"],["Fruta-do-conde","1 média"],["Melancia","1 fatia média"],["Melão","1 fatia média"],["Morango","5 unidades"],["Pera","½ média"],["Tangerina","1 unidade"],["Uva moscatel ou preta","10 bagos"],["Uva itália ou rubi","5 bagos"],["Cajá","1 grande"],["Kiwi","1 pequeno"]]}],"nao_come":["ervilha","carne de porco","peixe que não seja salmão ou atum","abobrinha","brócolis comum (só brocolini)","jiló","rabanete","beterraba","quiabo","banana","goiaba","mamão","maçã","laranja"],"regras":[{"titulo":"No dia a dia","itens":["Não fique mais de 3 a 4 horas sem comer.","Beba no mínimo 2 L de água por dia (a aba Peso calcula a sua meta pelo peso).","Nada de líquidos durante as refeições: beba 30 min antes ou depois.","Coma devagar, descansando os talheres, de preferência num lugar tranquilo.","Fome fora de hora: gelatina ou 2 castanhas-do-pará.","Atividade física: 50 a 60 min, de 3 a 4 vezes por semana.","Pese-se só nas consultas: uma balança pode diferir da outra."]},{"titulo":"No preparo","itens":["Grelhado, assado, cozido ou refogado, com pouco óleo (de preferência óleo de coco).","Tire toda a gordura das carnes e a pele das aves e do salmão.","Salada: vinagre, limão, sal, cebola, cebolinha, salsa, cheiro-verde e cúrcuma à vontade. Azeite é opcional, até 1 col. sobremesa.","Legumes: cozinhe só até ficarem macios.","Usou farinha ou maisena nos vegetais? Tire 1 colher de arroz.","Massas sem queijo ralado, com molho de tomate ou bolonhesa.","Integrais são calóricos: coma com moderação.","Laticínios desnatados ou leites vegetais (amêndoa, coco, chia, arroz).","Açúcar: evite o refinado (troque por demerara orgânico ou de coco). Adoçante, só stevia.","Doce diet ou light também engorda.","Salmão e atum: até 2 vezes por semana."]},{"titulo":"Em festas","itens":["Não vá com fome: coma antes.","Prefira salgados assados aos fritos e cuide da quantidade.","Álcool está na lista de proibidos: pense antes."]}],"proibido":["Doces em geral","Chocolate","Maionese","Creme de leite","Óleo em excesso","Frituras","Sal em excesso","Álcool","Carne de porco e derivados","Refrigerantes","Molhos industrializados","Temperos industrializados","Salgadinhos","Adoçantes (exceto stevia)"],"liberado":["Chá de gengibre com limão","Café","Suco de espinafre","Folhas verdes","Carnes grelhadas","Leite vegetal","Ovo orgânico","Azeite extravirgem","Cacau puro","Ora-pro-nóbis","Kefir de água e de coco","Salsa","Gengibre","Cúrcuma"],"ajustes":["Para chegar aos 1.400 kcal sem o azeite na salada: carne um pouco maior (≈115 g pronta), 2 castanhas-do-pará no lanche da tarde (permitidas nas orientações), tapioca de 3 colheres, 4 colheres cheias de vegetal B (100 g) e 2 col. chá de azeite no refogado das carnes. As castanhas e o azeite também deixam a gordura dentro da faixa de referência.","Lanche da tarde: uma das 2 frutas virou iogurte natural desnatado, opção do Quadro 3 que o plano permite nos lanches.","Adoçante: stevia, como pedem as orientações (o plano fala em adoçante artificial).","Peixe fica fora do cardápio fixo: salmão ou atum entram como troca da carne, até 2 vezes por semana.","Como você começou a academia, vale mostrar este cardápio à nutróloga na próxima consulta."],"sopa":{"kcal":157,"prot":8},"ref":{"prot_g":[80,120],"prot_pct_min":25,"carb_pct":[45,65],"gord_pct":[20,35],"fibra_min":25},"fontes":{"taco":{"nome":"Tabela Brasileira de Composição de Alimentos – TACO (NEPA/UNICAMP)","url":"https://www.nescon.medicina.ufmg.br/biblioteca/imagem/1549.pdf"},"proteina":{"nome":"Grosicki et al., Current Developments in Nutrition, 2024 (resumo)","url":"https://www.nestlemedicalhub.com/evidence/study-summary-diet-and-physical-activity-during-weight-loss-with-glp-1-medications"},"agua":{"nome":"Tua Saúde: quantos copos de água beber por dia","url":"https://www.tuasaude.com/news/2026/09/07/quantos-copos-de-agua-voce-deve-beber-por-dia/"}}};
 const LEMBRETE = 'medicação';
 const PWA = true;
+// Lista da casa (só no app): ativa quando firebase-config.js traz a configuração do Firebase
+const CASA_CFG = PWA && window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey ? window.FIREBASE_CONFIG : null;
+let modo = CASA_CFG ? 'carregando' : 'livre';   // livre | carregando | login | dona | casa
 const I = PLAN.itens;
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
@@ -521,10 +545,16 @@ const store = (() => {
 
 /* ---------- Navegação por abas (#hoje, #cardapio, ...) ---------- */
 let atual = null;
+function viewsDoModo() {
+  if (modo === 'casa') return ['compras'];
+  if (modo === 'login' || modo === 'carregando') return ['entrar'];
+  return VIEWS;
+}
 function show(v, opts = {}) {
-  if (!VIEWS.includes(v)) v = 'hoje';
+  const permitidas = viewsDoModo();
+  if (!permitidas.includes(v)) v = permitidas.includes('hoje') ? 'hoje' : permitidas[0];
   if (v === atual) return;
-  VIEWS.forEach(x => { document.getElementById('v-' + x).hidden = x !== v; });
+  ['entrar', ...VIEWS].forEach(x => { document.getElementById('v-' + x).hidden = x !== v; });
   $$('.tab').forEach(a => { if (a.dataset.view === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
   atual = v;
   if (!opts.keepScroll) window.scrollTo(0, 0);
@@ -640,8 +670,10 @@ function renderHoje() {
   else html += livreCard();
   html += aguaCard(agua) + noiteCard() + `<p class="sync" data-sync><i></i><span></span></p>`;
   keepFocus(() => { $('#v-hoje').innerHTML = html; });
-  const b = $('#hdr-badge'); b.dataset.dia = dia; b.textContent = NOME_DIA[dia];
-  $('#hdr-data').textContent = longDate(today);
+  if (modo === 'livre' || modo === 'dona') {
+    const b = $('#hdr-badge'); b.dataset.dia = dia; b.textContent = NOME_DIA[dia];
+    $('#hdr-data').textContent = longDate(today);
+  }
   store.paint();
 }
 function patchHoje(fn) {
@@ -704,16 +736,191 @@ function renderPreparo() {
     <section class="sec"><h2 class="h3">Congelar e reaquecer</h2><div class="card"><ul class="bul">${PLAN.congelar.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div></section>`;
 }
 
+/* ---------- Lista da casa (Firebase): login com e-mail e senha, só no app ---------- */
+const casa = (() => {
+  const V = '10.12.2';
+  const st = { user: null, papel: null, marcados: {}, extras: [], erro: null, sync: 'carregando', fb: null, unsubs: [] };
+  let onChange = () => {};
+  const chavePapel = uid => 'plano1400:papel:' + uid;
+  function lerPapel(uid) { try { return localStorage.getItem(chavePapel(uid)); } catch (e) { return null; } }
+  function gravarPapel(uid, p) { try { localStorage.setItem(chavePapel(uid), p); } catch (e) { /* sem armazenamento */ } }
+  async function iniciar() {
+    if (!CASA_CFG) return;
+    try {
+      const base = `https://www.gstatic.com/firebasejs/${V}/`;
+      const [appM, authM, fsM] = await Promise.all([
+        import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+      const app = appM.initializeApp(CASA_CFG);
+      const auth = authM.getAuth(app);   // a sessão fica salva no aparelho até a pessoa tocar em Sair
+      let db;
+      try { db = fsM.initializeFirestore(app, { localCache: fsM.persistentLocalCache({ tabManager: fsM.persistentMultipleTabManager() }) }); }
+      catch (e) { db = fsM.getFirestore(app); }
+      st.fb = { authM, fsM, auth, db };
+      authM.onAuthStateChanged(auth, user => { aoMudarUsuario(user); });
+    } catch (e) {
+      st.erro = 'carregar';
+      onChange('erro-carregar');
+    }
+  }
+  async function aoMudarUsuario(user) {
+    st.unsubs.forEach(u => { try { u(); } catch (e) { /* já encerrada */ } });
+    st.unsubs = [];
+    st.user = user || null; st.marcados = {}; st.extras = []; st.erro = null; st.sync = 'carregando';
+    if (!user) { st.papel = null; onChange('saiu'); return; }
+    st.papel = lerPapel(user.uid);
+    assinar();
+    if (st.papel) onChange('entrou');
+    // Só a dona consegue ler acesso/dona (regra do Firestore); as outras pessoas veem só a lista.
+    try {
+      const { fsM, db } = st.fb;
+      await fsM.getDoc(fsM.doc(db, 'acesso', 'dona'));
+      st.papel = 'dona';
+    } catch (e) {
+      if (e && e.code === 'permission-denied') st.papel = 'casa';
+      else if (!st.papel) st.papel = 'casa';
+    }
+    gravarPapel(user.uid, st.papel);
+    onChange('entrou');
+  }
+  function assinar() {
+    const { fsM, db } = st.fb;
+    const falha = err => { st.erro = (err && err.code) || 'erro'; onChange('dados'); };
+    st.unsubs.push(fsM.onSnapshot(fsM.doc(db, 'lista', 'compras'), { includeMetadataChanges: true }, snap => {
+      const d = snap.exists() ? snap.data() : null;
+      st.marcados = (d && d.marcados) || {};
+      st.sync = snap.metadata.hasPendingWrites ? 'pendente' : snap.metadata.fromCache ? 'offline' : 'ok';
+      st.erro = null;
+      onChange('dados');
+    }, falha));
+    st.unsubs.push(fsM.onSnapshot(fsM.collection(db, 'lista', 'compras', 'extras'), snap => {
+      st.extras = snap.docs.map(d => {
+        const x = d.data({ serverTimestamps: 'estimate' }) || {};
+        return { id: d.id, nome: String(x.nome || ''), qtd: String(x.qtd || ''), por: String(x.por || ''), marcado: !!x.marcado,
+          t: x.criado && typeof x.criado.toMillis === 'function' ? x.criado.toMillis() : Date.now() };
+      }).sort((a, b) => a.t - b.t);
+      onChange('dados');
+    }, falha));
+  }
+  const avisar = e => { st.erro = (e && e.code) || 'erro'; onChange('dados'); };
+  function entrar(email, senha) { return st.fb.authM.signInWithEmailAndPassword(st.fb.auth, email, senha); }
+  function sair() { return st.fb.authM.signOut(st.fb.auth); }
+  function marcar(id, v) {
+    const { fsM, db } = st.fb;
+    fsM.setDoc(fsM.doc(db, 'lista', 'compras'), { marcados: { [id]: v ? true : fsM.deleteField() } }, { merge: true }).catch(avisar);
+  }
+  function incluir(nome, qtd) {
+    const { fsM, db } = st.fb;
+    fsM.addDoc(fsM.collection(db, 'lista', 'compras', 'extras'),
+      { nome, qtd, por: (st.user && st.user.email) || '', marcado: false, criado: fsM.serverTimestamp() }).catch(avisar);
+  }
+  function marcarExtra(id, v) {
+    const { fsM, db } = st.fb;
+    fsM.updateDoc(fsM.doc(db, 'lista', 'compras', 'extras', id), { marcado: !!v }).catch(avisar);
+  }
+  function apagarExtra(id) {
+    const { fsM, db } = st.fb;
+    fsM.deleteDoc(fsM.doc(db, 'lista', 'compras', 'extras', id)).catch(avisar);
+  }
+  function desmarcarTudo() {
+    const { fsM, db } = st.fb;
+    const lote = fsM.writeBatch(db);
+    lote.set(fsM.doc(db, 'lista', 'compras'), { marcados: {} });
+    st.extras.filter(x => x.marcado).forEach(x => lote.update(fsM.doc(db, 'lista', 'compras', 'extras', x.id), { marcado: false }));
+    lote.commit().catch(avisar);
+  }
+  function apagarComprados() {
+    const { fsM, db } = st.fb;
+    const lote = fsM.writeBatch(db);
+    st.extras.filter(x => x.marcado).forEach(x => lote.delete(fsM.doc(db, 'lista', 'compras', 'extras', x.id)));
+    lote.commit().catch(avisar);
+  }
+  return { iniciar, entrar, sair, marcar, incluir, marcarExtra, apagarExtra, desmarcarTudo, apagarComprados,
+    get estado() { return st; }, set onChange(fn) { onChange = fn; } };
+})();
+const listaDaCasa = () => !!(CASA_CFG && casa.estado.user);
+const MSG_LOGIN = {
+  'auth/invalid-credential': 'E-mail ou senha não conferem.', 'auth/wrong-password': 'E-mail ou senha não conferem.',
+  'auth/user-not-found': 'E-mail ou senha não conferem.', 'auth/invalid-email': 'Confira o e-mail digitado.',
+  'auth/missing-password': 'Digite a senha.', 'auth/too-many-requests': 'Muitas tentativas. Espere alguns minutos e tente de novo.',
+  'auth/network-request-failed': 'Sem internet. Conecte e tente de novo.', 'auth/user-disabled': 'Este acesso foi desativado.'
+};
+function renderEntrar(msg) {
+  const el = $('#v-entrar');
+  if (modo === 'carregando') {
+    el.innerHTML = `<section class="card entrar"><p class="eyebrow">Acesso</p><h2 class="h2">Carregando…</h2><p class="lead" id="carregando-msg">Conectando à lista da casa.</p></section>`;
+    return;
+  }
+  const email = ($('#login-email') || {}).value || '';
+  el.innerHTML = `<section class="card entrar"><p class="eyebrow">Acesso</p><h2 class="h2">Entrar</h2>
+    <p class="lead">Use o e-mail e a senha do seu acesso. Você entra uma vez e o acesso fica salvo neste aparelho até tocar em Sair.</p>
+    <form id="form-login" novalidate>
+      <label class="campo" for="login-email"><span>E-mail</span><input id="login-email" type="email" inputmode="email" autocomplete="username" autocapitalize="off" spellcheck="false" value="${esc(email)}"></label>
+      <label class="campo" for="login-senha"><span>Senha</span><input id="login-senha" type="password" autocomplete="current-password"></label>
+      <button type="submit" class="btn" id="btn-entrar">Entrar</button>
+      ${msg ? `<p class="erro" role="alert">${esc(msg)}</p>` : ''}
+    </form></section>`;
+}
+function aplicarModo(novo) {
+  modo = novo;
+  document.body.dataset.modo = novo;
+  const titulo = $('#hdr-titulo'), sub = $('#hdr-data');
+  if (novo === 'casa') { titulo.textContent = 'Lista da casa'; sub.textContent = 'Compras de casa, para todo mundo'; }
+  else if (novo === 'login' || novo === 'carregando') { titulo.textContent = 'Entrar'; sub.textContent = 'Lista da casa e plano alimentar'; }
+  else { titulo.textContent = 'Plano alimentar'; sub.textContent = longDate(today); }
+  if (novo === 'login' || novo === 'carregando') renderEntrar();
+  renderCompras();
+  if (novo === 'dona' || novo === 'livre') renderHoje();
+  atual = null;
+  show(location.hash.slice(1) || (novo === 'casa' ? 'compras' : 'hoje'), { keepScroll: true });
+}
+
 /* ---------- Compras ---------- */
-let limparTimer = null;
+let limparTimer = null, extraArmado = null, extraTimer = null, compradosTimer = null;
+function grupoCompras(g, marc) {
+  return `<section class="card cgrupo"><h3 class="h3">${esc(g.grupo)}</h3>${g.nota ? `<p class="cnota">${esc(g.nota)}</p>` : ''}<ul class="clist">${g.itens.map(i => `<li><label class="ci" for="c-${i.id}"><input type="checkbox" id="c-${i.id}" data-compra="${i.id}"${marc[i.id] ? ' checked' : ''}><span class="ci-box" aria-hidden="true">${ICON.check}</span><span class="ci-t"><span class="ci-n">${esc(i.nome)}</span>${i.qtd ? `<span class="ci-q">${esc(i.qtd)}</span>` : ''}${i.obs ? `<small>${esc(i.obs)}</small>` : ''}</span></label></li>`).join('')}</ul></section>`;
+}
+function renderComprasCasa() {
+  const s = casa.estado;
+  const marc = s.marcados || {};
+  const plano = PLAN.compras.flatMap(g => g.itens);
+  const total = plano.length + s.extras.length;
+  const feitos = plano.filter(i => marc[i.id]).length + s.extras.filter(x => x.marcado).length;
+  const pct = total ? Math.round(feitos / total * 100) : 0;
+  const nome = ($('#extra-nome') || {}).value || '', qtd = ($('#extra-qtd') || {}).value || '';
+  const algumComprado = s.extras.some(x => x.marcado);
+  const quem = x => esc((x.por || '').split('@')[0]);
+  const syncTxt = s.erro === 'permission-denied' ? 'Este e-mail ainda não está liberado na lista da casa.'
+    : s.erro ? 'Não deu para salvar agora. Tente de novo.'
+    : s.sync === 'ok' ? 'Lista da casa sincronizada' : s.sync === 'pendente' ? 'Salvando…'
+    : s.sync === 'offline' ? 'Sem internet: as mudanças sobem quando conectar' : 'Conectando…';
+  const extras = s.extras.length
+    ? `<ul class="clist">${s.extras.map(x => `<li class="ci-row"><label class="ci" for="x-${x.id}"><input type="checkbox" id="x-${x.id}" data-extra="${x.id}"${x.marcado ? ' checked' : ''}><span class="ci-box" aria-hidden="true">${ICON.check}</span><span class="ci-t"><span class="ci-n">${esc(x.nome)}</span>${x.qtd ? `<span class="ci-q">${esc(x.qtd)}</span>` : ''}${x.por ? `<small>incluído por ${quem(x)}</small>` : ''}</span></label><button type="button" class="x-apagar${extraArmado === x.id ? ' armado' : ''}" id="xa-${x.id}" data-apagar-extra="${x.id}">${extraArmado === x.id ? 'Apagar?' : 'Apagar'}</button></li>`).join('')}</ul>`
+    : `<p class="vazio">Nada incluído ainda. O que alguém incluir aparece aqui para todo mundo.</p>`;
+  const html = `${modo === 'casa' ? bannerInstalar() : ''}<section class="block"><p class="eyebrow">Lista da casa</p><h2 class="h2">Compras da semana</h2>
+      <p class="lead">O que alguém marcar ou incluir aparece na hora para todo mundo da casa.</p>
+      <div class="cbar"><div class="line" aria-hidden="true"><span style="width:${pct}%"></span></div><span class="cbar-t"><b>${feitos}</b> de ${total} na sacola</span></div>
+      <div class="btns"><button type="button" class="btn" id="btn-copiar">Copiar o que falta</button><button type="button" class="btn ghost" id="btn-limpar">Desmarcar tudo</button>${algumComprado ? `<button type="button" class="btn ghost" id="btn-comprados">Apagar incluídos já comprados</button>` : ''}</div>
+      <textarea id="copia-txt" class="copia" readonly hidden aria-label="Lista de compras para copiar"></textarea>
+      <p class="casa-bar"><span>Entrou como <b>${esc((s.user && s.user.email) || '')}</b></span><button type="button" class="link" id="btn-sair">Sair</button></p></section>
+    <section class="card cgrupo"><h3 class="h3">Incluídos pela casa</h3>
+      <form id="form-extra" autocomplete="off" novalidate><div class="campos">
+        <label class="campo" for="extra-nome"><span>Item</span><input id="extra-nome" type="text" maxlength="80" placeholder="ex.: detergente" value="${esc(nome)}"></label>
+        <label class="campo curto" for="extra-qtd"><span>Quantidade</span><input id="extra-qtd" type="text" maxlength="30" placeholder="ex.: 2" value="${esc(qtd)}"></label>
+        <button type="submit" class="btn">Incluir</button></div></form>
+      ${extras}</section>
+    ${PLAN.compras.map(g => grupoCompras(g, marc)).join('')}
+    <p class="sync" data-s="${s.erro ? 'erro' : s.sync === 'ok' ? 'conta' : s.sync === 'offline' ? 'offline' : 'salvando'}"><i></i><span>${esc(syncTxt)}</span></p>`;
+  keepFocus(() => { $('#v-compras').innerHTML = html; });
+}
 function renderCompras() {
+  if (listaDaCasa()) { renderComprasCasa(); return; }
   const marc = (store.get('compras') || {}).marcados || {};
   const todos = PLAN.compras.flatMap(g => g.itens);
   const feitos = todos.filter(i => marc[i.id]).length;
   const pct = Math.round(feitos / todos.length * 100);
   const grupos = PLAN.compras.map(g => `<section class="card cgrupo"><h3 class="h3">${esc(g.grupo)}</h3>${g.nota ? `<p class="cnota">${esc(g.nota)}</p>` : ''}<ul class="clist">${g.itens.map(i => `<li><label class="ci" for="c-${i.id}"><input type="checkbox" id="c-${i.id}" data-compra="${i.id}"${marc[i.id] ? ' checked' : ''}><span class="ci-box" aria-hidden="true">${ICON.check}</span><span class="ci-t"><span class="ci-n">${esc(i.nome)}</span>${i.qtd ? `<span class="ci-q">${esc(i.qtd)}</span>` : ''}${i.obs ? `<small>${esc(i.obs)}</small>` : ''}</span></label></li>`).join('')}</ul></section>`).join('');
   const html = `<section class="block"><p class="eyebrow">Segunda a sábado</p><h2 class="h2">Compras da semana</h2>
-      <p class="lead">Tudo de segunda a sábado: as 12 marmitas, 6 cafés da manhã, 12 lanches e as saladas. O domingo livre não entra.</p>
+      <p class="lead">Tudo de segunda a sábado: as 12 marmitas, 6 cafés da manhã, 12 lanches e as saladas. O domingo livre não entra.${PWA ? '' : ' A lista compartilhada com a casa fica no app do iPhone.'}</p>
       <div class="cbar"><div class="line" aria-hidden="true"><span style="width:${pct}%"></span></div><span class="cbar-t"><b>${feitos}</b> de ${todos.length} na sacola</span></div>
       <div class="btns"><button type="button" class="btn" id="btn-copiar">Copiar o que falta</button><button type="button" class="btn ghost" id="btn-limpar">Desmarcar tudo</button></div>
       <textarea id="copia-txt" class="copia" readonly hidden aria-label="Lista de compras para copiar"></textarea></section>
@@ -723,8 +930,13 @@ function renderCompras() {
   store.paint();
 }
 function textoFalta() {
-  const marc = (store.get('compras') || {}).marcados || {};
+  const casaOn = listaDaCasa();
+  const marc = casaOn ? (casa.estado.marcados || {}) : ((store.get('compras') || {}).marcados || {});
   const linhas = ['Compras da semana (seg a sáb)'];
+  if (casaOn) {
+    const ext = casa.estado.extras.filter(x => !x.marcado);
+    if (ext.length) { linhas.push('', 'Incluídos pela casa'); ext.forEach(x => linhas.push(`- ${x.nome}${x.qtd ? ': ' + x.qtd : ''}`)); }
+  }
   PLAN.compras.forEach(g => {
     const its = g.itens.filter(i => !marc[i.id]);
     if (!its.length) return;
@@ -750,9 +962,20 @@ function limpar(btn) {
     return;
   }
   clearTimeout(limparTimer);
-  store.set('compras', { marcados: {} });
-  renderCompras();
+  if (listaDaCasa()) casa.desmarcarTudo();
+  else { store.set('compras', { marcados: {} }); renderCompras(); }
   toast('Lista desmarcada');
+}
+function apagarComprados(btn) {
+  if (!btn.classList.contains('armado')) {
+    btn.classList.add('armado'); btn.textContent = 'Toque de novo para apagar';
+    clearTimeout(compradosTimer);
+    compradosTimer = setTimeout(() => { const b = $('#btn-comprados'); if (b) { b.classList.remove('armado'); b.textContent = 'Apagar incluídos já comprados'; } }, 4000);
+    return;
+  }
+  clearTimeout(compradosTimer);
+  casa.apagarComprados();
+  toast('Itens comprados apagados');
 }
 
 /* ---------- Peso ---------- */
@@ -927,18 +1150,36 @@ document.addEventListener('click', e => {
     clearTimeout(apagarTimer); apagarArmado = null;
     savePeso(s => { s.registros = (Array.isArray(s.registros) ? s.registros : []).filter(x => x && x.d !== d); });
     toast('Registro apagado');
+  } else if (t.matches('[data-apagar-extra]')) {
+    const id = t.dataset.apagarExtra;
+    if (extraArmado !== id) {
+      extraArmado = id; clearTimeout(extraTimer);
+      extraTimer = setTimeout(() => { extraArmado = null; renderCompras(); }, 4000);
+      renderCompras();
+      return;
+    }
+    clearTimeout(extraTimer); extraArmado = null;
+    casa.apagarExtra(id);
+    toast('Item apagado');
   } else if (t.id === 'btn-copiar') {
     copiar();
   } else if (t.id === 'btn-limpar') {
     limpar(t);
+  } else if (t.id === 'btn-comprados') {
+    apagarComprados(t);
+  } else if (t.id === 'btn-sair') {
+    casa.sair().catch(() => toast('Não deu para sair agora. Tente de novo.'));
   } else if (t.id === 'instalar-ok') {
     try { localStorage.setItem('plano1400:instalar-ok', '1'); } catch (e) { /* sem armazenamento */ }
-    renderHoje();
+    renderHoje(); renderCompras();
   }
 });
 document.addEventListener('change', e => {
   const t = e.target;
-  if (!t.matches || !t.matches('[data-compra]')) return;
+  if (!t.matches) return;
+  if (t.matches('[data-extra]')) { casa.marcarExtra(t.dataset.extra, t.checked); return; }
+  if (!t.matches('[data-compra]')) return;
+  if (listaDaCasa()) { casa.marcar(t.dataset.compra, t.checked); return; }
   const cur = store.get('compras') || {};
   const marcados = Object.assign({}, cur.marcados || {});
   if (t.checked) marcados[t.dataset.compra] = true; else delete marcados[t.dataset.compra];
@@ -948,6 +1189,27 @@ document.addEventListener('change', e => {
 
 document.addEventListener('submit', e => {
   const f = e.target;
+  if (f.id === 'form-login') {
+    e.preventDefault();
+    const email = $('#login-email').value.trim().toLowerCase(), senha = $('#login-senha').value;
+    if (!email || !senha) { renderEntrar('Preencha o e-mail e a senha.'); return; }
+    const b = $('#btn-entrar'); b.disabled = true; b.textContent = 'Entrando…';
+    casa.entrar(email, senha).catch(err => {
+      renderEntrar(MSG_LOGIN[err && err.code] || `Não deu para entrar (${(err && err.code) || 'erro'}).`);
+    });
+    return;
+  }
+  if (f.id === 'form-extra') {
+    e.preventDefault();
+    const nomeEl = $('#extra-nome'), qtdEl = $('#extra-qtd');
+    const nome = nomeEl.value.trim().slice(0, 80), qtd = qtdEl.value.trim().slice(0, 30);
+    if (!nome) { toast('Digite o nome do item'); nomeEl.focus(); return; }
+    nomeEl.value = ''; qtdEl.value = '';
+    casa.incluir(nome, qtd);
+    nomeEl.focus();
+    toast(`Incluído: ${nome}`);
+    return;
+  }
   if (f.id === 'form-peso') {
     e.preventDefault();
     const kg = num($('#peso-kg').value);
@@ -993,7 +1255,27 @@ store.onChange = k => {
   else if (k === 'peso') { renderPeso(); renderHoje(); }
 };
 renderHoje(); renderCardapio(); renderPreparo(); renderCompras(); renderPeso(); renderGuia();
-show(location.hash.slice(1) || 'hoje', { keepScroll: true });
+if (CASA_CFG) {
+  casa.onChange = ev => {
+    if (ev === 'erro-carregar') { aplicarModo('login'); renderEntrar('Sem internet para entrar. Conecte e abra o app de novo.'); return; }
+    if (ev === 'saiu') { aplicarModo('login'); return; }
+    if (ev === 'entrou') {
+      const alvo = casa.estado.papel === 'dona' ? 'dona' : 'casa';
+      if (modo !== alvo) aplicarModo(alvo); else renderCompras();
+      return;
+    }
+    renderCompras();
+  };
+  aplicarModo('carregando');
+  casa.iniciar();
+  setTimeout(() => {
+    const m = $('#carregando-msg');
+    if (modo === 'carregando' && m) m.textContent = 'Está demorando. Confira a internet; o app continua tentando.';
+  }, 12000);
+} else {
+  document.body.dataset.modo = 'livre';
+  show(location.hash.slice(1) || 'hoje', { keepScroll: true });
+}
 store.init(() => [todayKey, 'compras', 'peso']);
 })();
 </script>
