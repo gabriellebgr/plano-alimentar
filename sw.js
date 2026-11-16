@@ -1,5 +1,5 @@
 // Service worker do Plano Alimentar 1.400: guarda o app para abrir sem internet.
-const CACHE = 'plano1400-8fb7ef59c1';
+const CACHE = 'plano1400-f156135cb8';
 const FONTES = 'plano1400-fontes';
 const LIBS = 'plano1400-libs';
 const APP = ['./', './index.html', './manifest.webmanifest', './firebase-config.js', './icon-192.png', './icon-512.png',
