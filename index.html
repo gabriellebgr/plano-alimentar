@@ -351,6 +351,25 @@ body[data-modo="carregando"] .scale, body[data-modo="login"] .scale, body[data-m
 .x-apagar{ flex:0 0 auto; margin-top:8px; min-height:32px; padding:3px 9px; border:1px solid var(--line); border-radius:8px; background:none; font-size:12px; font-weight:600; color:var(--ink-2); cursor:pointer; }
 .x-apagar.armado{ background:var(--danger); border-color:var(--danger); color:var(--surface); }
 .vazio{ margin:6px 0 0; font-size:13.5px; color:var(--ink-2); }
+.ico{ flex:0 0 auto; width:36px; min-height:40px; margin-top:2px; display:grid; place-items:center; border:0; border-radius:8px; background:none; color:var(--ink-2); cursor:pointer; }
+.ico svg{ width:18px; height:18px; }
+.ico:hover{ color:var(--ink); background:var(--surface-2); }
+.arrasto{ cursor:grab; touch-action:none; -webkit-user-select:none; user-select:none; }
+.fantasma{ position:fixed; z-index:60; margin:0; padding:0 10px; list-style:none; pointer-events:none; background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); opacity:.96; }
+.lugar{ list-style:none; margin:4px 0; border:2px dashed var(--b); border-radius:10px; background:var(--b-soft); }
+.cat-vazia{ display:none; }
+#v-compras.arrastando .cat-vazia{ display:block; }
+#v-compras.arrastando .cat-vazia .clist{ min-height:48px; border:1px dashed var(--line); border-radius:10px; }
+html{ overflow-anchor:none; }
+body.arrastando-agora{ -webkit-user-select:none; user-select:none; cursor:grabbing; }
+li.chegou{ animation:chegou 1.8s ease-out; border-radius:10px; }
+@keyframes chegou{ 0%,45%{ background:var(--b-soft); } 100%{ background:transparent; } }
+.recentes{ margin-top:10px; padding:10px 12px; border-radius:12px; background:var(--b-soft); }
+.recentes .clist li{ border-top:0; padding:4px 0; }
+.recentes small{ color:var(--b); font-weight:600; }
+.editor{ list-style:none; padding:10px 0 12px; }
+.editor .btns{ margin-top:4px; }
+.campo select{ font:inherit; font-size:16px; font-weight:500; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:8px 10px; min-height:44px; width:100%; }
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{ transition:none !important; animation:none !important; scroll-behavior:auto !important; }
 }
@@ -736,10 +755,58 @@ function renderPreparo() {
     <section class="sec"><h2 class="h3">Congelar e reaquecer</h2><div class="card"><ul class="bul">${PLAN.congelar.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div></section>`;
 }
 
+/* ---------- Categorias da lista da casa ---------- */
+const CATS = [
+  { id: 'acougue', nome: 'Açougue' }, { id: 'hortifruti', nome: 'Legumes e verduras' },
+  { id: 'frutas', nome: 'Frutas e castanhas' }, { id: 'laticinios', nome: 'Laticínios e padaria' },
+  { id: 'despensa', nome: 'Despensa', nota: 'Confira o que já tem em casa.' }, { id: 'bebidas', nome: 'Bebidas' },
+  { id: 'congelados', nome: 'Congelados' }, { id: 'limpeza', nome: 'Limpeza' },
+  { id: 'higiene', nome: 'Higiene e cuidados' }, { id: 'pets', nome: 'Pets' },
+  { id: 'utilidades', nome: 'Utilidades e marmitas' }, { id: 'outros', nome: 'Outros' }
+];
+const CAT_IDS = new Set(CATS.map(c => c.id));
+const nomeCat = id => (CATS.find(c => c.id === id) || CATS[CATS.length - 1]).nome;
+const CAT_DO_GRUPO = { 'Açougue': 'acougue', 'Legumes e verduras': 'hortifruti', 'Frutas e castanhas': 'frutas',
+  'Laticínios e padaria': 'laticinios', 'Despensa (confira o que já tem)': 'despensa', 'Para as marmitas': 'utilidades' };
+const NOTA_DA_CAT = {};
+PLAN.compras.forEach(g => { if (g.nota) NOTA_DA_CAT[CAT_DO_GRUPO[g.grupo] || 'outros'] = g.nota; });
+const ITENS_PLANO = PLAN.compras.flatMap(g => g.itens.map((i, n) => Object.assign({}, i, { catBase: CAT_DO_GRUPO[g.grupo] || 'outros', ordemBase: (n + 1) * 1000 })));
+const PALAVRAS = {
+  limpeza: ['agua sanitaria', 'sanitaria', 'alvejante', 'detergente', 'sabao', 'sabao em po', 'lava roupa', 'amaciante', 'desinfetante', 'multiuso', 'limpador', 'limpa vidro', 'esponja', 'palha de aco', 'saco de lixo', 'pano de chao', 'pano de prato', 'flanela', 'vassoura', 'rodo', 'balde', 'luva', 'cloro', 'tira manchas', 'lustra moveis', 'cera', 'inseticida', 'odorizador', 'aromatizador', 'desentupidor', 'alcool', 'alcool em gel', 'pedra sanitaria', 'pastilha sanitaria', 'lava loucas', 'tira limo'],
+  higiene: ['papel higienico', 'sabonete', 'shampoo', 'xampu', 'condicionador', 'creme de pentear', 'pasta de dente', 'creme dental', 'escova de dente', 'escova de dentes', 'fio dental', 'enxaguante', 'enxaguante bucal', 'desodorante', 'absorvente', 'protetor solar', 'hidratante', 'algodao', 'cotonete', 'fralda', 'lenco umedecido', 'barbeador', 'gilete', 'lamina de barbear', 'esmalte', 'acetona', 'perfume', 'curativo', 'esparadrapo', 'gaze', 'remedio', 'dipirona', 'paracetamol', 'vitamina', 'soro fisiologico', 'pomada', 'repelente', 'lenco de papel'],
+  pets: ['racao', 'areia de gato', 'areia higienica', 'petisco', 'tapete higienico', 'coleira', 'antipulgas', 'vermifugo'],
+  bebidas: ['refrigerante', 'refri', 'coca', 'guarana', 'suco', 'agua', 'agua mineral', 'agua com gas', 'agua de coco', 'cerveja', 'vinho', 'espumante', 'vodka', 'cachaca', 'whisky', 'energetico', 'isotonico', 'cha gelado', 'kombucha', 'cha mate'],
+  congelados: ['congelado', 'congelada', 'congelados', 'congeladas', 'sorvete', 'picole', 'pizza', 'lasanha', 'hamburguer', 'nuggets', 'polpa', 'batata frita', 'pao de queijo', 'gelo', 'acai', 'empanado'],
+  acougue: ['carne', 'carne moida', 'frango', 'peito de frango', 'peito', 'coxa', 'sobrecoxa', 'asa', 'file', 'file de frango', 'patinho', 'alcatra', 'acem', 'musculo', 'maminha', 'picanha', 'contrafile', 'fraldinha', 'costela', 'cupim', 'linguica', 'salsicha', 'bacon', 'presunto', 'peito de peru', 'peru', 'mortadela', 'salame', 'peixe', 'salmao', 'atum', 'tilapia', 'sardinha', 'camarao', 'bacalhau', 'ovo', 'figado', 'bisteca', 'lombo', 'pernil', 'almondega'],
+  hortifruti: ['alface', 'tomate', 'cebola', 'alho', 'batata', 'batata doce', 'mandioca', 'aipim', 'inhame', 'cenoura', 'beterraba', 'abobora', 'abobrinha', 'berinjela', 'pepino', 'pimentao', 'chuchu', 'quiabo', 'vagem', 'brocolis', 'brocolini', 'couve', 'couve flor', 'repolho', 'espinafre', 'rucula', 'agriao', 'acelga', 'salsinha', 'salsa', 'cebolinha', 'cheiro verde', 'coentro', 'manjericao', 'hortela', 'alecrim', 'gengibre', 'cogumelo', 'champignon', 'milho verde', 'rabanete', 'jilo', 'nabo', 'limao', 'limoes', 'verdura', 'legume', 'salada', 'tempero verde'],
+  frutas: ['banana', 'maca', 'laranja', 'tangerina', 'mexerica', 'bergamota', 'mamao', 'mamoes', 'melao', 'melancia', 'abacaxi', 'uva', 'morango', 'manga', 'kiwi', 'pera', 'pessego', 'ameixa', 'goiaba', 'maracuja', 'abacate', 'coco', 'caju', 'acerola', 'amora', 'mirtilo', 'framboesa', 'caqui', 'figo', 'fruta', 'castanha', 'castanha do para', 'nozes', 'noz', 'amendoa', 'amendoim', 'avela', 'pistache', 'tamara', 'uva passa'],
+  laticinios: ['leite', 'iogurte', 'queijo', 'requeijao', 'manteiga', 'margarina', 'creme de leite', 'nata', 'coalhada', 'ricota', 'cottage', 'mussarela', 'mucarela', 'parmesao', 'catupiry', 'kefir', 'pao', 'paes', 'pao frances', 'pao de forma', 'bisnaguinha', 'torrada', 'bolo', 'broa', 'croissant', 'baguete', 'sonho', 'rosca'],
+  despensa: ['arroz', 'feijao', 'lentilha', 'grao de bico', 'ervilha', 'soja', 'quinoa', 'macarrao', 'massa', 'espaguete', 'farinha', 'fuba', 'polvilho', 'tapioca', 'goma de tapioca', 'aveia', 'granola', 'cereal', 'acucar', 'adocante', 'stevia', 'sal', 'oleo', 'azeite', 'vinagre', 'molho', 'extrato de tomate', 'catchup', 'ketchup', 'mostarda', 'maionese', 'tempero', 'pimenta', 'oregano', 'colorau', 'paprica', 'curcuma', 'acafrao', 'cominho', 'canela', 'louro', 'caldo', 'fermento', 'gelatina', 'achocolatado', 'cafe', 'cha', 'biscoito', 'bolacha', 'chocolate', 'doce', 'geleia', 'mel', 'atum em lata', 'sardinha em lata', 'milho em lata', 'milho', 'azeitona', 'pipoca', 'leite condensado', 'leite em po', 'leite de coco', 'pasta de amendoim', 'creme de avela', 'castanha de caju'],
+  utilidades: ['pote', 'potes', 'papel aluminio', 'aluminio', 'papel filme', 'filme plastico', 'saco zip', 'saco plastico', 'sacola', 'papel toalha', 'guardanapo', 'copo descartavel', 'prato descartavel', 'talher', 'vela', 'fosforo', 'isqueiro', 'pilha', 'lampada', 'fita', 'fita crepe', 'etiqueta', 'caneta', 'marmita', 'forma', 'assadeira', 'papel manteiga']
+};
+const normalizar = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+const DIC = [];
+Object.keys(PALAVRAS).forEach(cat => PALAVRAS[cat].forEach(k => {
+  const kn = normalizar(k);
+  DIC.push({ cat, n: kn.length, re: new RegExp('(^| )' + kn + '(s|es)?(?= |$)') });
+}));
+// A palavra que abre o nome manda (em "suco de laranja", vale "suco"); depois, a expressão mais longa.
+function categorizar(nome) {
+  const t = normalizar(nome);
+  let melhor = null;
+  DIC.forEach(d => {
+    const m = d.re.exec(t);
+    if (!m) return;
+    const nota = (m.index === 0 ? 1000 : 0) + d.n;
+    if (!melhor || nota > melhor.nota) melhor = { cat: d.cat, nota };
+  });
+  return melhor ? melhor.cat : 'outros';
+}
+
 /* ---------- Lista da casa (Firebase): login com e-mail e senha, só no app ---------- */
 const casa = (() => {
   const V = '10.12.2';
-  const st = { user: null, papel: null, marcados: {}, extras: [], erro: null, sync: 'carregando', fb: null, unsubs: [] };
+  const st = { user: null, papel: null, marcados: {}, ordemPlano: {}, catPlano: {}, extras: [], erro: null, sync: 'carregando', fb: null, unsubs: [] };
   let onChange = () => {};
   const chavePapel = uid => 'plano1400:papel:' + uid;
   function lerPapel(uid) { try { return localStorage.getItem(chavePapel(uid)); } catch (e) { return null; } }
@@ -765,7 +832,7 @@ const casa = (() => {
   async function aoMudarUsuario(user) {
     st.unsubs.forEach(u => { try { u(); } catch (e) { /* já encerrada */ } });
     st.unsubs = [];
-    st.user = user || null; st.marcados = {}; st.extras = []; st.erro = null; st.sync = 'carregando';
+    st.user = user || null; st.marcados = {}; st.ordemPlano = {}; st.catPlano = {}; st.extras = []; st.erro = null; st.sync = 'carregando';
     if (!user) { st.papel = null; onChange('saiu'); return; }
     st.papel = lerPapel(user.uid);
     assinar();
@@ -788,6 +855,8 @@ const casa = (() => {
     st.unsubs.push(fsM.onSnapshot(fsM.doc(db, 'lista', 'compras'), { includeMetadataChanges: true }, snap => {
       const d = snap.exists() ? snap.data() : null;
       st.marcados = (d && d.marcados) || {};
+      st.ordemPlano = (d && d.ordem) || {};
+      st.catPlano = (d && d.cat) || {};
       st.sync = snap.metadata.hasPendingWrites ? 'pendente' : snap.metadata.fromCache ? 'offline' : 'ok';
       st.erro = null;
       onChange('dados');
@@ -795,8 +864,9 @@ const casa = (() => {
     st.unsubs.push(fsM.onSnapshot(fsM.collection(db, 'lista', 'compras', 'extras'), snap => {
       st.extras = snap.docs.map(d => {
         const x = d.data({ serverTimestamps: 'estimate' }) || {};
-        return { id: d.id, nome: String(x.nome || ''), qtd: String(x.qtd || ''), por: String(x.por || ''), marcado: !!x.marcado,
-          t: x.criado && typeof x.criado.toMillis === 'function' ? x.criado.toMillis() : Date.now() };
+        const t = x.criado && typeof x.criado.toMillis === 'function' ? x.criado.toMillis() : Date.now();
+        return { id: d.id, nome: String(x.nome || ''), qtd: String(x.qtd || ''), por: String(x.por || ''), marcado: !!x.marcado, t,
+          cat: CAT_IDS.has(x.cat) ? x.cat : categorizar(x.nome), ordem: Number.isFinite(x.ordem) ? x.ordem : t };
       }).sort((a, b) => a.t - b.t);
       onChange('dados');
     }, falha));
@@ -808,10 +878,19 @@ const casa = (() => {
     const { fsM, db } = st.fb;
     fsM.setDoc(fsM.doc(db, 'lista', 'compras'), { marcados: { [id]: v ? true : fsM.deleteField() } }, { merge: true }).catch(avisar);
   }
+  const refExtra = id => st.fb.fsM.doc(st.fb.db, 'lista', 'compras', 'extras', id);
   function incluir(nome, qtd) {
     const { fsM, db } = st.fb;
-    fsM.addDoc(fsM.collection(db, 'lista', 'compras', 'extras'),
-      { nome, qtd, por: (st.user && st.user.email) || '', marcado: false, criado: fsM.serverTimestamp() }).catch(avisar);
+    const ref = fsM.doc(fsM.collection(db, 'lista', 'compras', 'extras'));
+    fsM.setDoc(ref, { nome, qtd, cat: categorizar(nome), ordem: Date.now(), por: (st.user && st.user.email) || '',
+      marcado: false, criado: fsM.serverTimestamp() }).catch(avisar);
+    return ref.id;
+  }
+  function editarExtra(id, dados) { st.fb.fsM.updateDoc(refExtra(id), dados).catch(avisar); }
+  function moverExtra(id, cat, ordem) { st.fb.fsM.updateDoc(refExtra(id), { cat, ordem }).catch(avisar); }
+  function moverPlano(id, cat, ordem) {
+    const { fsM, db } = st.fb;
+    fsM.setDoc(fsM.doc(db, 'lista', 'compras'), { ordem: { [id]: ordem }, cat: { [id]: cat } }, { merge: true }).catch(avisar);
   }
   function marcarExtra(id, v) {
     const { fsM, db } = st.fb;
@@ -824,7 +903,7 @@ const casa = (() => {
   function desmarcarTudo() {
     const { fsM, db } = st.fb;
     const lote = fsM.writeBatch(db);
-    lote.set(fsM.doc(db, 'lista', 'compras'), { marcados: {} });
+    lote.set(fsM.doc(db, 'lista', 'compras'), { marcados: fsM.deleteField() }, { merge: true });
     st.extras.filter(x => x.marcado).forEach(x => lote.update(fsM.doc(db, 'lista', 'compras', 'extras', x.id), { marcado: false }));
     lote.commit().catch(avisar);
   }
@@ -834,7 +913,7 @@ const casa = (() => {
     st.extras.filter(x => x.marcado).forEach(x => lote.delete(fsM.doc(db, 'lista', 'compras', 'extras', x.id)));
     lote.commit().catch(avisar);
   }
-  return { iniciar, entrar, sair, marcar, incluir, marcarExtra, apagarExtra, desmarcarTudo, apagarComprados,
+  return { iniciar, entrar, sair, marcar, incluir, editarExtra, moverExtra, moverPlano, marcarExtra, apagarExtra, desmarcarTudo, apagarComprados,
     get estado() { return st; }, set onChange(fn) { onChange = fn; } };
 })();
 const listaDaCasa = () => !!(CASA_CFG && casa.estado.user);
@@ -879,39 +958,176 @@ let limparTimer = null, extraArmado = null, extraTimer = null, compradosTimer = 
 function grupoCompras(g, marc) {
   return `<section class="card cgrupo"><h3 class="h3">${esc(g.grupo)}</h3>${g.nota ? `<p class="cnota">${esc(g.nota)}</p>` : ''}<ul class="clist">${g.itens.map(i => `<li><label class="ci" for="c-${i.id}"><input type="checkbox" id="c-${i.id}" data-compra="${i.id}"${marc[i.id] ? ' checked' : ''}><span class="ci-box" aria-hidden="true">${ICON.check}</span><span class="ci-t"><span class="ci-n">${esc(i.nome)}</span>${i.qtd ? `<span class="ci-q">${esc(i.qtd)}</span>` : ''}${i.obs ? `<small>${esc(i.obs)}</small>` : ''}</span></label></li>`).join('')}</ul></section>`;
 }
+const recentes = new Set(), chegou = new Set();
+let editando = null, rascunhoEdicao = null, arraste = null, renderPendente = false;
+function piscar(id) { chegou.add(id); setTimeout(() => { chegou.delete(id); }, 1900); }
+function itensDaCasa() {
+  const s = casa.estado, lista = [];
+  ITENS_PLANO.forEach(i => lista.push({ tipo: 'p', id: i.id, nome: i.nome, qtd: i.qtd, obs: i.obs, marcado: !!s.marcados[i.id],
+    cat: CAT_IDS.has(s.catPlano[i.id]) ? s.catPlano[i.id] : i.catBase,
+    ordem: Number.isFinite(s.ordemPlano[i.id]) ? s.ordemPlano[i.id] : i.ordemBase }));
+  s.extras.forEach(x => lista.push({ tipo: 'x', id: x.id, nome: x.nome, qtd: x.qtd, por: x.por, marcado: x.marcado, cat: x.cat, ordem: x.ordem }));
+  return lista;
+}
+ICON.arrastar = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>';
+ICON.lapis = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>';
+function editorExtra(it) {
+  const v = rascunhoEdicao && rascunhoEdicao.id === it.id ? rascunhoEdicao : it;
+  const arm = extraArmado === it.id;
+  return `<li class="editor" data-item="x:${it.id}" data-ordem="${it.ordem}"><form id="form-editar" data-id="${it.id}" autocomplete="off" novalidate>
+    <div class="campos">
+      <label class="campo" for="ed-nome"><span>Item</span><input id="ed-nome" type="text" maxlength="80" value="${esc(v.nome)}"></label>
+      <label class="campo curto" for="ed-qtd"><span>Quantidade</span><input id="ed-qtd" type="text" maxlength="30" value="${esc(v.qtd)}"></label>
+      <label class="campo" for="ed-cat"><span>Categoria</span><select id="ed-cat">${CATS.map(c => `<option value="${c.id}"${c.id === v.cat ? ' selected' : ''}>${esc(c.nome)}</option>`).join('')}</select></label>
+    </div>
+    <div class="btns"><button type="submit" class="btn">Salvar</button><button type="button" class="btn ghost" id="ed-cancelar">Cancelar</button><button type="button" class="btn ghost${arm ? ' armado' : ''}" id="ed-apagar" data-apagar-extra="${it.id}">${arm ? 'Toque de novo para apagar' : 'Apagar'}</button></div>
+  </form></li>`;
+}
+function linhaItem(it) {
+  if (it.tipo === 'x' && editando === it.id) return editorExtra(it);
+  const idc = (it.tipo === 'p' ? 'c-' : 'x-') + it.id;
+  const marca = it.tipo === 'p' ? `data-compra="${it.id}"` : `data-extra="${it.id}"`;
+  const sub = it.tipo === 'x' ? (it.por ? `<small>incluído por ${esc(it.por.split('@')[0])}</small>` : '') : (it.obs ? `<small>${esc(it.obs)}</small>` : '');
+  return `<li class="ci-row${chegou.has(it.id) ? ' chegou' : ''}" data-item="${it.tipo}:${it.id}" data-ordem="${it.ordem}"><label class="ci" for="${idc}"><input type="checkbox" id="${idc}" ${marca}${it.marcado ? ' checked' : ''}><span class="ci-box" aria-hidden="true">${ICON.check}</span><span class="ci-t"><span class="ci-n">${esc(it.nome)}</span>${it.qtd ? `<span class="ci-q">${esc(it.qtd)}</span>` : ''}${sub}</span></label>${it.tipo === 'x' ? `<button type="button" class="ico" id="ed-${it.id}" data-editar-extra="${it.id}" aria-label="Editar ${esc(it.nome)}">${ICON.lapis}</button>` : ''}<button type="button" class="ico arrasto" aria-label="Arrastar ${esc(it.nome)} para outra posição ou categoria">${ICON.arrastar}</button></li>`;
+}
 function renderComprasCasa() {
+  if (arraste) { renderPendente = true; return; }
   const s = casa.estado;
-  const marc = s.marcados || {};
-  const plano = PLAN.compras.flatMap(g => g.itens);
-  const total = plano.length + s.extras.length;
-  const feitos = plano.filter(i => marc[i.id]).length + s.extras.filter(x => x.marcado).length;
+  const nomeNovo = ($('#extra-nome') || {}).value || '', qtdNova = ($('#extra-qtd') || {}).value || '';
+  if (editando && $('#ed-nome')) rascunhoEdicao = { id: editando, nome: $('#ed-nome').value, qtd: $('#ed-qtd').value, cat: $('#ed-cat').value };
+  if (editando && !s.extras.some(x => x.id === editando)) { editando = null; rascunhoEdicao = null; }
+  const todos = itensDaCasa();
+  const total = todos.length, feitos = todos.filter(i => i.marcado).length;
   const pct = total ? Math.round(feitos / total * 100) : 0;
-  const nome = ($('#extra-nome') || {}).value || '', qtd = ($('#extra-qtd') || {}).value || '';
+  const novos = todos.filter(i => i.tipo === 'x' && recentes.has(i.id));
+  const porCat = {};
+  CATS.forEach(c => { porCat[c.id] = []; });
+  todos.forEach(i => { if (!(i.tipo === 'x' && recentes.has(i.id))) porCat[i.cat].push(i); });
+  CATS.forEach(c => porCat[c.id].sort((a, b) => a.ordem - b.ordem));
   const algumComprado = s.extras.some(x => x.marcado);
-  const quem = x => esc((x.por || '').split('@')[0]);
   const syncTxt = s.erro === 'permission-denied' ? 'Este e-mail ainda não está liberado na lista da casa.'
     : s.erro ? 'Não deu para salvar agora. Tente de novo.'
     : s.sync === 'ok' ? 'Lista da casa sincronizada' : s.sync === 'pendente' ? 'Salvando…'
     : s.sync === 'offline' ? 'Sem internet: as mudanças sobem quando conectar' : 'Conectando…';
-  const extras = s.extras.length
-    ? `<ul class="clist">${s.extras.map(x => `<li class="ci-row"><label class="ci" for="x-${x.id}"><input type="checkbox" id="x-${x.id}" data-extra="${x.id}"${x.marcado ? ' checked' : ''}><span class="ci-box" aria-hidden="true">${ICON.check}</span><span class="ci-t"><span class="ci-n">${esc(x.nome)}</span>${x.qtd ? `<span class="ci-q">${esc(x.qtd)}</span>` : ''}${x.por ? `<small>incluído por ${quem(x)}</small>` : ''}</span></label><button type="button" class="x-apagar${extraArmado === x.id ? ' armado' : ''}" id="xa-${x.id}" data-apagar-extra="${x.id}">${extraArmado === x.id ? 'Apagar?' : 'Apagar'}</button></li>`).join('')}</ul>`
-    : `<p class="vazio">Nada incluído ainda. O que alguém incluir aparece aqui para todo mundo.</p>`;
+  const blocoNovos = novos.length ? `<div class="recentes" aria-live="polite"><ul class="clist">${novos.map(i => `<li><span class="ci-t"><span class="ci-n">${esc(i.nome)}</span>${i.qtd ? `<span class="ci-q">${esc(i.qtd)}</span>` : ''}<small>vai para ${esc(nomeCat(i.cat))}</small></span></li>`).join('')}</ul></div>` : '';
+  const cats = CATS.map(c => {
+    const its = porCat[c.id], nota = NOTA_DA_CAT[c.id] || c.nota;
+    return `<section class="card cgrupo${its.length ? '' : ' cat-vazia'}" data-cat-sec="${c.id}"><h3 class="h3">${esc(c.nome)}</h3>${nota && its.length ? `<p class="cnota">${esc(nota)}</p>` : ''}<ul class="clist" data-cat="${c.id}">${its.map(linhaItem).join('')}</ul></section>`;
+  }).join('');
   const html = `${modo === 'casa' ? bannerInstalar() : ''}<section class="block"><p class="eyebrow">Lista da casa</p><h2 class="h2">Compras da semana</h2>
-      <p class="lead">O que alguém marcar ou incluir aparece na hora para todo mundo da casa.</p>
+      <p class="lead">O que alguém marcar ou incluir aparece na hora para todo mundo. Toque no lápis para editar um item incluído e arraste pelos pontinhos para mudar a ordem ou a categoria.</p>
       <div class="cbar"><div class="line" aria-hidden="true"><span style="width:${pct}%"></span></div><span class="cbar-t"><b>${feitos}</b> de ${total} na sacola</span></div>
       <div class="btns"><button type="button" class="btn" id="btn-copiar">Copiar o que falta</button><button type="button" class="btn ghost" id="btn-limpar">Desmarcar tudo</button>${algumComprado ? `<button type="button" class="btn ghost" id="btn-comprados">Apagar incluídos já comprados</button>` : ''}</div>
       <textarea id="copia-txt" class="copia" readonly hidden aria-label="Lista de compras para copiar"></textarea>
       <p class="casa-bar"><span>Entrou como <b>${esc((s.user && s.user.email) || '')}</b></span><button type="button" class="link" id="btn-sair">Sair</button></p></section>
-    <section class="card cgrupo"><h3 class="h3">Incluídos pela casa</h3>
+    <section class="card cgrupo"><h3 class="h3">Incluir item</h3>
       <form id="form-extra" autocomplete="off" novalidate><div class="campos">
-        <label class="campo" for="extra-nome"><span>Item</span><input id="extra-nome" type="text" maxlength="80" placeholder="ex.: detergente" value="${esc(nome)}"></label>
-        <label class="campo curto" for="extra-qtd"><span>Quantidade</span><input id="extra-qtd" type="text" maxlength="30" placeholder="ex.: 2" value="${esc(qtd)}"></label>
+        <label class="campo" for="extra-nome"><span>Item</span><input id="extra-nome" type="text" maxlength="80" placeholder="ex.: detergente" value="${esc(nomeNovo)}"></label>
+        <label class="campo curto" for="extra-qtd"><span>Quantidade</span><input id="extra-qtd" type="text" maxlength="30" placeholder="ex.: 2" value="${esc(qtdNova)}"></label>
         <button type="submit" class="btn">Incluir</button></div></form>
-      ${extras}</section>
-    ${PLAN.compras.map(g => grupoCompras(g, marc)).join('')}
+      ${blocoNovos}</section>
+    <div class="cats" id="cats">${cats}</div>
     <p class="sync" data-s="${s.erro ? 'erro' : s.sync === 'ok' ? 'conta' : s.sync === 'offline' ? 'offline' : 'salvando'}"><i></i><span>${esc(syncTxt)}</span></p>`;
   keepFocus(() => { $('#v-compras').innerHTML = html; });
 }
+function textoFaltaCasa() {
+  const todos = itensDaCasa();
+  const linhas = ['Compras da semana (seg a sáb)'];
+  CATS.forEach(c => {
+    const its = todos.filter(i => i.cat === c.id && !i.marcado).sort((a, b) => a.ordem - b.ordem);
+    if (!its.length) return;
+    linhas.push('', c.nome);
+    its.forEach(i => linhas.push(`- ${i.nome}${i.qtd ? ': ' + i.qtd : ''}`));
+  });
+  return linhas.join('\n');
+}
+
+/* ---------- Arrastar itens (dedo ou mouse), só na lista da casa ---------- */
+function posicionarLugar(x, y) {
+  const a = arraste;
+  const el = document.elementFromPoint(x, y);
+  if (!el) return;
+  const alvo = el.closest('li[data-item]');
+  if (alvo && alvo !== a.li && alvo.closest('#cats')) {
+    const r = alvo.getBoundingClientRect();
+    if (y < r.top + r.height / 2) { if (alvo.previousElementSibling !== a.lugar) alvo.before(a.lugar); }
+    else if (alvo.nextElementSibling !== a.lugar) alvo.after(a.lugar);
+    return;
+  }
+  const sec = el.closest('[data-cat-sec]');
+  if (!sec || !sec.closest('#cats')) return;
+  const ul = sec.querySelector('ul[data-cat]');
+  const its = Array.from(ul.children).filter(n => n.dataset && n.dataset.item && !n.hidden);
+  if (!its.length || y > its[its.length - 1].getBoundingClientRect().bottom) { if (ul.lastElementChild !== a.lugar) ul.appendChild(a.lugar); }
+  else if (y < its[0].getBoundingClientRect().top && ul.firstElementChild !== a.lugar) ul.prepend(a.lugar);
+}
+function rolarSozinho() {
+  if (!arraste) return;
+  const y = arraste.y, topo = 120, base = window.innerHeight - 130;
+  const dy = y < topo ? -Math.ceil((topo - y) / 5) : y > base ? Math.ceil((y - base) / 5) : 0;
+  if (dy) { window.scrollBy(0, dy); posicionarLugar(arraste.x, arraste.y); }
+  requestAnimationFrame(rolarSozinho);
+}
+document.addEventListener('pointerdown', e => {
+  const h = e.target.closest && e.target.closest('.arrasto');
+  if (!h || !listaDaCasa() || arraste || (e.button != null && e.button > 0)) return;
+  const li = h.closest('li[data-item]');
+  if (!li) return;
+  e.preventDefault();
+  const r = li.getBoundingClientRect();
+  const fant = li.cloneNode(true);
+  fant.classList.add('fantasma');
+  fant.removeAttribute('data-item');
+  fant.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+  Object.assign(fant.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px' });
+  document.body.appendChild(fant);
+  const lugar = document.createElement('li');
+  lugar.className = 'lugar';
+  lugar.style.height = r.height + 'px';
+  li.before(lugar);
+  li.hidden = true;
+  $('#v-compras').classList.add('arrastando');
+  document.body.classList.add('arrastando-agora');
+  arraste = { li, fant, lugar, y0: e.clientY, top0: r.top, x: e.clientX, y: e.clientY, pid: e.pointerId };
+  try { h.setPointerCapture(e.pointerId); } catch (err) { /* sem captura */ }
+  requestAnimationFrame(rolarSozinho);
+});
+document.addEventListener('pointermove', e => {
+  if (!arraste || e.pointerId !== arraste.pid) return;
+  e.preventDefault();
+  arraste.x = e.clientX; arraste.y = e.clientY;
+  arraste.fant.style.top = (arraste.top0 + e.clientY - arraste.y0) + 'px';
+  posicionarLugar(e.clientX, e.clientY);
+}, { passive: false });
+function soltar(e) {
+  const a = arraste;
+  if (!a || e.pointerId !== a.pid) return;
+  arraste = null;
+  const ul = a.lugar.parentElement;
+  const cat = ul && ul.dataset ? ul.dataset.cat : null;
+  const catAntes = a.li.parentElement && a.li.parentElement.dataset ? a.li.parentElement.dataset.cat : null;
+  const mesmo = cat === catAntes && (a.lugar.nextElementSibling === a.li || a.lugar.previousElementSibling === a.li);
+  let prev = a.lugar.previousElementSibling, next = a.lugar.nextElementSibling;
+  while (prev && (prev === a.li || !prev.dataset || !prev.dataset.item)) prev = prev.previousElementSibling;
+  while (next && (next === a.li || !next.dataset || !next.dataset.item)) next = next.nextElementSibling;
+  const sep = a.li.dataset.item.indexOf(':');
+  const tipo = a.li.dataset.item.slice(0, sep), id = a.li.dataset.item.slice(sep + 1);
+  a.fant.remove(); a.lugar.remove(); a.li.hidden = false;
+  $('#v-compras').classList.remove('arrastando');
+  document.body.classList.remove('arrastando-agora');
+  if (cat && CAT_IDS.has(cat) && !mesmo && e.type !== 'pointercancel') {
+    const op = prev ? Number(prev.dataset.ordem) : null, on = next ? Number(next.dataset.ordem) : null;
+    const ordem = op != null && on != null ? (op + on) / 2 : op != null ? op + 1000 : on != null ? on - 1000 : 1000;
+    if (tipo === 'x') casa.moverExtra(id, cat, ordem); else casa.moverPlano(id, cat, ordem);
+    piscar(id);
+    if (cat !== catAntes) toast(`Movido para ${nomeCat(cat)}`);
+  }
+  renderPendente = false;
+  renderCompras();
+}
+document.addEventListener('pointerup', soltar);
+document.addEventListener('pointercancel', soltar);
+
 function renderCompras() {
   if (listaDaCasa()) { renderComprasCasa(); return; }
   const marc = (store.get('compras') || {}).marcados || {};
@@ -930,7 +1146,8 @@ function renderCompras() {
   store.paint();
 }
 function textoFalta() {
-  const casaOn = listaDaCasa();
+  if (listaDaCasa()) return textoFaltaCasa();
+  const casaOn = false;
   const marc = casaOn ? (casa.estado.marcados || {}) : ((store.get('compras') || {}).marcados || {});
   const linhas = ['Compras da semana (seg a sáb)'];
   if (casaOn) {
@@ -1150,6 +1367,13 @@ document.addEventListener('click', e => {
     clearTimeout(apagarTimer); apagarArmado = null;
     savePeso(s => { s.registros = (Array.isArray(s.registros) ? s.registros : []).filter(x => x && x.d !== d); });
     toast('Registro apagado');
+  } else if (t.matches('[data-editar-extra]')) {
+    editando = t.dataset.editarExtra; rascunhoEdicao = null; extraArmado = null;
+    renderCompras();
+    const n = $('#ed-nome'); if (n) { n.focus(); try { n.setSelectionRange(n.value.length, n.value.length); } catch (err) { /* ok */ } }
+  } else if (t.id === 'ed-cancelar') {
+    editando = null; rascunhoEdicao = null; extraArmado = null;
+    renderCompras();
   } else if (t.matches('[data-apagar-extra]')) {
     const id = t.dataset.apagarExtra;
     if (extraArmado !== id) {
@@ -1159,6 +1383,7 @@ document.addEventListener('click', e => {
       return;
     }
     clearTimeout(extraTimer); extraArmado = null;
+    if (editando === id) { editando = null; rascunhoEdicao = null; }
     casa.apagarExtra(id);
     toast('Item apagado');
   } else if (t.id === 'btn-copiar') {
@@ -1205,9 +1430,24 @@ document.addEventListener('submit', e => {
     const nome = nomeEl.value.trim().slice(0, 80), qtd = qtdEl.value.trim().slice(0, 30);
     if (!nome) { toast('Digite o nome do item'); nomeEl.focus(); return; }
     nomeEl.value = ''; qtdEl.value = '';
-    casa.incluir(nome, qtd);
-    nomeEl.focus();
-    toast(`Incluído: ${nome}`);
+    const novoId = casa.incluir(nome, qtd);
+    recentes.add(novoId);
+    setTimeout(() => { recentes.delete(novoId); piscar(novoId); renderCompras(); }, 5000);
+    renderCompras();
+    const n = $('#extra-nome'); if (n) n.focus();
+    return;
+  }
+  if (f.id === 'form-editar') {
+    e.preventDefault();
+    const id = f.dataset.id;
+    const nome = $('#ed-nome').value.trim().slice(0, 80), qtd = $('#ed-qtd').value.trim().slice(0, 30), cat = $('#ed-cat').value;
+    if (!nome) { toast('Digite o nome do item'); $('#ed-nome').focus(); return; }
+    const antes = casa.estado.extras.find(x => x.id === id);
+    casa.editarExtra(id, { nome, qtd, cat: CAT_IDS.has(cat) ? cat : 'outros' });
+    editando = null; rascunhoEdicao = null; extraArmado = null;
+    if (antes && antes.cat !== cat) piscar(id);
+    renderCompras();
+    toast('Item atualizado');
     return;
   }
   if (f.id === 'form-peso') {
