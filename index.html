@@ -806,7 +806,7 @@ function categorizar(nome) {
 /* ---------- Lista da casa (Firebase): login com e-mail e senha, só no app ---------- */
 const casa = (() => {
   const V = '10.12.2';
-  const st = { user: null, papel: null, marcados: {}, ordemPlano: {}, catPlano: {}, extras: [], erro: null, sync: 'carregando', fb: null, unsubs: [] };
+  const st = { user: null, papel: null, marcados: {}, ordemPlano: {}, catPlano: {}, removidos: {}, extras: [], erro: null, sync: 'carregando', fb: null, unsubs: [] };
   let onChange = () => {};
   const chavePapel = uid => 'plano1400:papel:' + uid;
   function lerPapel(uid) { try { return localStorage.getItem(chavePapel(uid)); } catch (e) { return null; } }
@@ -832,7 +832,7 @@ const casa = (() => {
   async function aoMudarUsuario(user) {
     st.unsubs.forEach(u => { try { u(); } catch (e) { /* já encerrada */ } });
     st.unsubs = [];
-    st.user = user || null; st.marcados = {}; st.ordemPlano = {}; st.catPlano = {}; st.extras = []; st.erro = null; st.sync = 'carregando';
+    st.user = user || null; st.marcados = {}; st.ordemPlano = {}; st.catPlano = {}; st.removidos = {}; st.extras = []; st.erro = null; st.sync = 'carregando';
     if (!user) { st.papel = null; onChange('saiu'); return; }
     st.papel = lerPapel(user.uid);
     assinar();
@@ -857,6 +857,7 @@ const casa = (() => {
       st.marcados = (d && d.marcados) || {};
       st.ordemPlano = (d && d.ordem) || {};
       st.catPlano = (d && d.cat) || {};
+      st.removidos = (d && d.removidos) || {};
       st.sync = snap.metadata.hasPendingWrites ? 'pendente' : snap.metadata.fromCache ? 'offline' : 'ok';
       st.erro = null;
       onChange('dados');
@@ -900,20 +901,28 @@ const casa = (() => {
     const { fsM, db } = st.fb;
     fsM.deleteDoc(fsM.doc(db, 'lista', 'compras', 'extras', id)).catch(avisar);
   }
-  function desmarcarTudo() {
+  // Nova semana: os itens do plano voltam todos para a lista e nada fica marcado.
+  function novaSemana() {
     const { fsM, db } = st.fb;
     const lote = fsM.writeBatch(db);
-    lote.set(fsM.doc(db, 'lista', 'compras'), { marcados: fsM.deleteField() }, { merge: true });
+    lote.set(fsM.doc(db, 'lista', 'compras'), { marcados: fsM.deleteField(), removidos: fsM.deleteField() }, { merge: true });
     st.extras.filter(x => x.marcado).forEach(x => lote.update(fsM.doc(db, 'lista', 'compras', 'extras', x.id), { marcado: false }));
     lote.commit().catch(avisar);
   }
+  // Tira da lista tudo o que já foi comprado: apaga os incluídos marcados e esconde os itens do plano marcados até a nova semana.
   function apagarComprados() {
     const { fsM, db } = st.fb;
     const lote = fsM.writeBatch(db);
     st.extras.filter(x => x.marcado).forEach(x => lote.delete(fsM.doc(db, 'lista', 'compras', 'extras', x.id)));
+    const comprados = ITENS_PLANO.filter(i => st.marcados[i.id] && !st.removidos[i.id]);
+    if (comprados.length) {
+      const rem = {};
+      comprados.forEach(i => { rem[i.id] = true; });
+      lote.set(fsM.doc(db, 'lista', 'compras'), { removidos: rem, marcados: fsM.deleteField() }, { merge: true });
+    }
     lote.commit().catch(avisar);
   }
-  return { iniciar, entrar, sair, marcar, incluir, editarExtra, moverExtra, moverPlano, marcarExtra, apagarExtra, desmarcarTudo, apagarComprados,
+  return { iniciar, entrar, sair, marcar, incluir, editarExtra, moverExtra, moverPlano, marcarExtra, apagarExtra, novaSemana, apagarComprados,
     get estado() { return st; }, set onChange(fn) { onChange = fn; } };
 })();
 const listaDaCasa = () => !!(CASA_CFG && casa.estado.user);
@@ -963,7 +972,7 @@ let editando = null, rascunhoEdicao = null, arraste = null, renderPendente = fal
 function piscar(id) { chegou.add(id); setTimeout(() => { chegou.delete(id); }, 1900); }
 function itensDaCasa() {
   const s = casa.estado, lista = [];
-  ITENS_PLANO.forEach(i => lista.push({ tipo: 'p', id: i.id, nome: i.nome, qtd: i.qtd, obs: i.obs, marcado: !!s.marcados[i.id],
+  ITENS_PLANO.filter(i => !s.removidos[i.id]).forEach(i => lista.push({ tipo: 'p', id: i.id, nome: i.nome, qtd: i.qtd, obs: i.obs, marcado: !!s.marcados[i.id],
     cat: CAT_IDS.has(s.catPlano[i.id]) ? s.catPlano[i.id] : i.catBase,
     ordem: Number.isFinite(s.ordemPlano[i.id]) ? s.ordemPlano[i.id] : i.ordemBase }));
   s.extras.forEach(x => lista.push({ tipo: 'x', id: x.id, nome: x.nome, qtd: x.qtd, por: x.por, marcado: x.marcado, cat: x.cat, ordem: x.ordem }));
@@ -1004,7 +1013,9 @@ function renderComprasCasa() {
   CATS.forEach(c => { porCat[c.id] = []; });
   todos.forEach(i => { if (!(i.tipo === 'x' && recentes.has(i.id))) porCat[i.cat].push(i); });
   CATS.forEach(c => porCat[c.id].sort((a, b) => a.ordem - b.ordem));
-  const algumComprado = s.extras.some(x => x.marcado);
+  const algumComprado = todos.some(i => i.marcado);
+  const ocultos = ITENS_PLANO.filter(i => s.removidos[i.id]).length;
+  const notaOcultos = ocultos ? `<p class="cnota">${ocultos === 1 ? '1 item do plano já comprado saiu' : ocultos + ' itens do plano já comprados saíram'} da lista. Em “Nova semana”, o plano volta inteiro.</p>` : '';
   const syncTxt = s.erro === 'permission-denied' ? 'Este e-mail ainda não está liberado na lista da casa.'
     : s.erro ? 'Não deu para salvar agora. Tente de novo.'
     : s.sync === 'ok' ? 'Lista da casa sincronizada' : s.sync === 'pendente' ? 'Salvando…'
@@ -1017,7 +1028,7 @@ function renderComprasCasa() {
   const html = `${modo === 'casa' ? bannerInstalar() : ''}<section class="block"><p class="eyebrow">Lista da casa</p><h2 class="h2">Compras da semana</h2>
       <p class="lead">O que alguém marcar ou incluir aparece na hora para todo mundo. Toque no lápis para editar um item incluído e arraste pelos pontinhos para mudar a ordem ou a categoria.</p>
       <div class="cbar"><div class="line" aria-hidden="true"><span style="width:${pct}%"></span></div><span class="cbar-t"><b>${feitos}</b> de ${total} na sacola</span></div>
-      <div class="btns"><button type="button" class="btn" id="btn-copiar">Copiar o que falta</button><button type="button" class="btn ghost" id="btn-limpar">Desmarcar tudo</button>${algumComprado ? `<button type="button" class="btn ghost" id="btn-comprados">Apagar incluídos já comprados</button>` : ''}</div>
+      <div class="btns"><button type="button" class="btn" id="btn-copiar">Copiar o que falta</button>${algumComprado ? `<button type="button" class="btn ghost" id="btn-comprados">Apagar os já comprados</button>` : ''}<button type="button" class="btn ghost" id="btn-limpar">Nova semana</button></div>${notaOcultos}
       <textarea id="copia-txt" class="copia" readonly hidden aria-label="Lista de compras para copiar"></textarea>
       <p class="casa-bar"><span>Entrou como <b>${esc((s.user && s.user.email) || '')}</b></span><button type="button" class="link" id="btn-sair">Sair</button></p></section>
     <section class="card cgrupo"><h3 class="h3">Incluir item</h3>
@@ -1173,26 +1184,26 @@ function copiar() {
 }
 function limpar(btn) {
   if (!btn.classList.contains('armado')) {
-    btn.classList.add('armado'); btn.textContent = 'Toque de novo para desmarcar';
+    const rotulo = listaDaCasa() ? 'Nova semana' : 'Desmarcar tudo';
+    btn.classList.add('armado'); btn.textContent = listaDaCasa() ? 'Toque de novo: o plano volta inteiro' : 'Toque de novo para desmarcar';
     clearTimeout(limparTimer);
-    limparTimer = setTimeout(() => { const b = $('#btn-limpar'); if (b) { b.classList.remove('armado'); b.textContent = 'Desmarcar tudo'; } }, 4000);
+    limparTimer = setTimeout(() => { const b = $('#btn-limpar'); if (b) { b.classList.remove('armado'); b.textContent = rotulo; } }, 4000);
     return;
   }
   clearTimeout(limparTimer);
-  if (listaDaCasa()) casa.desmarcarTudo();
-  else { store.set('compras', { marcados: {} }); renderCompras(); }
-  toast('Lista desmarcada');
+  if (listaDaCasa()) { casa.novaSemana(); toast('Nova semana: o plano voltou inteiro'); }
+  else { store.set('compras', { marcados: {} }); renderCompras(); toast('Lista desmarcada'); }
 }
 function apagarComprados(btn) {
   if (!btn.classList.contains('armado')) {
     btn.classList.add('armado'); btn.textContent = 'Toque de novo para apagar';
     clearTimeout(compradosTimer);
-    compradosTimer = setTimeout(() => { const b = $('#btn-comprados'); if (b) { b.classList.remove('armado'); b.textContent = 'Apagar incluídos já comprados'; } }, 4000);
+    compradosTimer = setTimeout(() => { const b = $('#btn-comprados'); if (b) { b.classList.remove('armado'); b.textContent = 'Apagar os já comprados'; } }, 4000);
     return;
   }
   clearTimeout(compradosTimer);
   casa.apagarComprados();
-  toast('Itens comprados apagados');
+  toast('O que já foi comprado saiu da lista');
 }
 
 /* ---------- Peso ---------- */
