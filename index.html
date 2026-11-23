@@ -380,6 +380,9 @@ li.chegou{ animation:chegou 1.8s ease-out; border-radius:10px; }
 .recentes small{ color:var(--b); font-weight:600; }
 .editor{ list-style:none; padding:10px 0 12px; }
 .editor .btns{ margin-top:4px; }
+.editor .hint{ margin:-2px 0 8px; }
+.ed-nome{ margin:0; font-weight:600; color:var(--ink); }
+.ci-q.ajustada{ color:var(--ink); font-weight:600; }
 .campo select{ font:inherit; font-size:16px; font-weight:500; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:8px 10px; min-height:44px; width:100%; }
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{ transition:none !important; animation:none !important; scroll-behavior:auto !important; }
@@ -829,7 +832,7 @@ function categorizar(nome) {
 /* ---------- Lista da casa (Firebase): login com e-mail e senha, só no app ---------- */
 const casa = (() => {
   const V = '10.12.2';
-  const st = { user: null, papel: null, marcados: {}, ordemPlano: {}, catPlano: {}, removidos: {}, extras: [], erro: null, sync: 'carregando', fb: null, unsubs: [] };
+  const st = { user: null, papel: null, marcados: {}, ordemPlano: {}, catPlano: {}, removidos: {}, qtdPlano: {}, extras: [], erro: null, sync: 'carregando', fb: null, unsubs: [] };
   let onChange = () => {};
   const chavePapel = uid => 'plano1400:papel:' + uid;
   function lerPapel(uid) { try { return localStorage.getItem(chavePapel(uid)); } catch (e) { return null; } }
@@ -855,7 +858,7 @@ const casa = (() => {
   async function aoMudarUsuario(user) {
     st.unsubs.forEach(u => { try { u(); } catch (e) { /* já encerrada */ } });
     st.unsubs = [];
-    st.user = user || null; st.marcados = {}; st.ordemPlano = {}; st.catPlano = {}; st.removidos = {}; st.extras = []; st.erro = null; st.sync = 'carregando';
+    st.user = user || null; st.marcados = {}; st.ordemPlano = {}; st.catPlano = {}; st.removidos = {}; st.qtdPlano = {}; st.extras = []; st.erro = null; st.sync = 'carregando';
     if (!user) { st.papel = null; onChange('saiu'); return; }
     st.papel = lerPapel(user.uid);
     assinar();
@@ -881,6 +884,7 @@ const casa = (() => {
       st.ordemPlano = (d && d.ordem) || {};
       st.catPlano = (d && d.cat) || {};
       st.removidos = (d && d.removidos) || {};
+      st.qtdPlano = (d && d.qtd) || {};
       st.sync = snap.metadata.hasPendingWrites ? 'pendente' : snap.metadata.fromCache ? 'offline' : 'ok';
       st.erro = null;
       onChange('dados');
@@ -916,6 +920,16 @@ const casa = (() => {
     const { fsM, db } = st.fb;
     fsM.setDoc(fsM.doc(db, 'lista', 'compras'), { ordem: { [id]: ordem }, cat: { [id]: cat } }, { merge: true }).catch(avisar);
   }
+  // Quantidade ajustada de um item do cardápio (null volta à do cardápio). Vale para a casa toda até a nova semana.
+  function editarPlano(id, qtd) {
+    const { fsM, db } = st.fb;
+    fsM.setDoc(fsM.doc(db, 'lista', 'compras'), { qtd: { [id]: qtd ? qtd : fsM.deleteField() } }, { merge: true }).catch(avisar);
+  }
+  // "Já tenho": tira o item do cardápio da lista até a nova semana.
+  function tirarPlano(id) {
+    const { fsM, db } = st.fb;
+    fsM.setDoc(fsM.doc(db, 'lista', 'compras'), { removidos: { [id]: true }, marcados: { [id]: fsM.deleteField() } }, { merge: true }).catch(avisar);
+  }
   function marcarExtra(id, v) {
     const { fsM, db } = st.fb;
     fsM.updateDoc(fsM.doc(db, 'lista', 'compras', 'extras', id), { marcado: !!v }).catch(avisar);
@@ -924,11 +938,11 @@ const casa = (() => {
     const { fsM, db } = st.fb;
     fsM.deleteDoc(fsM.doc(db, 'lista', 'compras', 'extras', id)).catch(avisar);
   }
-  // Nova semana: os itens do plano voltam todos para a lista e nada fica marcado.
+  // Nova semana: os itens do plano voltam todos para a lista, com as quantidades do cardápio, e nada fica marcado.
   function novaSemana() {
     const { fsM, db } = st.fb;
     const lote = fsM.writeBatch(db);
-    lote.set(fsM.doc(db, 'lista', 'compras'), { marcados: fsM.deleteField(), removidos: fsM.deleteField() }, { merge: true });
+    lote.set(fsM.doc(db, 'lista', 'compras'), { marcados: fsM.deleteField(), removidos: fsM.deleteField(), qtd: fsM.deleteField() }, { merge: true });
     st.extras.filter(x => x.marcado).forEach(x => lote.update(fsM.doc(db, 'lista', 'compras', 'extras', x.id), { marcado: false }));
     lote.commit().catch(avisar);
   }
@@ -945,7 +959,7 @@ const casa = (() => {
     }
     lote.commit().catch(avisar);
   }
-  return { iniciar, entrar, sair, marcar, incluir, editarExtra, moverExtra, moverPlano, marcarExtra, apagarExtra, novaSemana, apagarComprados,
+  return { iniciar, entrar, sair, marcar, incluir, editarExtra, moverExtra, moverPlano, editarPlano, tirarPlano, marcarExtra, apagarExtra, novaSemana, apagarComprados,
     get estado() { return st; }, set onChange(fn) { onChange = fn; } };
 })();
 const listaDaCasa = () => !!(CASA_CFG && casa.estado.user);
@@ -987,15 +1001,42 @@ function aplicarModo(novo) {
 
 /* ---------- Compras ---------- */
 let limparTimer = null, extraArmado = null, extraTimer = null, compradosTimer = null;
-function grupoCompras(g, marc) {
-  return `<section class="card cgrupo"><h3 class="h3">${esc(g.grupo)}</h3>${g.nota ? `<p class="cnota">${esc(g.nota)}</p>` : ''}<ul class="clist">${g.itens.map(i => `<li><label class="ci" for="c-${i.id}"><input type="checkbox" id="c-${i.id}" data-compra="${i.id}"${marc[i.id] ? ' checked' : ''}><span class="ci-box" aria-hidden="true">${ICON.check}</span><span class="ci-t"><span class="ci-n">${esc(i.nome)}</span>${i.qtd ? `<span class="ci-q">${esc(i.qtd)}</span>` : ''}${i.obs ? `<small>${esc(i.obs)}</small>` : ''}</span></label></li>`).join('')}</ul></section>`;
+// Quantidades ajustadas dos itens do cardápio: na casa, compartilhadas; sem login, só neste aparelho.
+function qtdAjustadas() {
+  const aj = listaDaCasa() ? (casa.estado.qtdPlano || {}) : ((store.get('compras') || {}).qtd || {});
+  const r = {};
+  Object.keys(aj).forEach(k => { if (typeof aj[k] === 'string' && aj[k].trim()) r[k] = aj[k]; });
+  return r;
+}
+function subPlano(it) {
+  if (it.ajustada) return `<small>no cardápio: ${esc(it.qtdBase || 'sem quantidade')}${it.obs ? ' · ' + esc(it.obs) : ''}</small>`;
+  return it.obs ? `<small>${esc(it.obs)}</small>` : '';
+}
+function editorPlano(it) {
+  const v = rascunhoPlano && rascunhoPlano.id === it.id ? rascunhoPlano.qtd : (it.qtd || '');
+  const arm = planoArmado === it.id;
+  const tirar = listaDaCasa() ? `<button type="button" class="btn ghost${arm ? ' armado' : ''}" id="ed-tirar" data-tirar-plano="${it.id}">${arm ? 'Toque de novo para tirar' : 'Já tenho: tirar da lista'}</button>` : '';
+  return `<li class="editor" data-item="p:${it.id}" data-ordem="${it.ordem || 0}"><form id="form-plano" data-id="${it.id}" autocomplete="off" novalidate>
+    <p class="ed-nome">${esc(it.nome)}</p>
+    <div class="campos"><label class="campo" for="ed-qtd-plano"><span>Quantidade para comprar</span><input id="ed-qtd-plano" type="text" maxlength="30" value="${esc(v)}"></label></div>
+    <p class="hint">No cardápio: ${esc(it.qtdBase || 'sem quantidade')}${it.obs ? ' · ' + esc(it.obs) : ''}. Deixe em branco para voltar a essa quantidade.</p>
+    <div class="btns"><button type="submit" class="btn">Salvar</button><button type="button" class="btn ghost" id="ed-cancelar">Cancelar</button>${tirar}</div>
+  </form></li>`;
+}
+const lapisPlano = it => `<button type="button" class="ico" id="edp-${it.id}" data-editar-plano="${it.id}" aria-label="Editar a quantidade de ${esc(it.nome)}">${ICON.lapis}</button>`;
+function linhaPlanoLivre(i, marc, aj) {
+  const it = Object.assign({}, i, { qtdBase: i.qtd, qtd: aj[i.id] || i.qtd, ajustada: !!aj[i.id] });
+  if (editandoPlano === i.id) return editorPlano(it);
+  return `<li class="ci-row"><label class="ci" for="c-${i.id}"><input type="checkbox" id="c-${i.id}" data-compra="${i.id}"${marc[i.id] ? ' checked' : ''}><span class="ci-box" aria-hidden="true">${ICON.check}</span><span class="ci-t"><span class="ci-n">${esc(i.nome)}</span>${it.qtd ? `<span class="ci-q${it.ajustada ? ' ajustada' : ''}">${esc(it.qtd)}</span>` : ''}${subPlano(it)}</span></label>${lapisPlano(it)}</li>`;
 }
 const recentes = new Set(), chegou = new Set();
 let editando = null, rascunhoEdicao = null, arraste = null, renderPendente = false;
+let editandoPlano = null, rascunhoPlano = null, planoArmado = null, planoTimer = null;
 function piscar(id) { chegou.add(id); setTimeout(() => { chegou.delete(id); }, 1900); }
 function itensDaCasa() {
   const s = casa.estado, lista = [];
-  ITENS_PLANO.filter(i => !s.removidos[i.id]).forEach(i => lista.push({ tipo: 'p', id: i.id, nome: i.nome, qtd: i.qtd, obs: i.obs, marcado: !!s.marcados[i.id],
+  const aj = qtdAjustadas();
+  ITENS_PLANO.filter(i => !s.removidos[i.id]).forEach(i => lista.push({ tipo: 'p', id: i.id, nome: i.nome, qtd: aj[i.id] || i.qtd, qtdBase: i.qtd, ajustada: !!aj[i.id], obs: i.obs, marcado: !!s.marcados[i.id],
     cat: CAT_IDS.has(s.catPlano[i.id]) ? s.catPlano[i.id] : i.catBase,
     ordem: Number.isFinite(s.ordemPlano[i.id]) ? s.ordemPlano[i.id] : i.ordemBase }));
   s.extras.forEach(x => lista.push({ tipo: 'x', id: x.id, nome: x.nome, qtd: x.qtd, por: x.por, marcado: x.marcado, cat: x.cat, ordem: x.ordem }));
@@ -1017,10 +1058,11 @@ function editorExtra(it) {
 }
 function linhaItem(it) {
   if (it.tipo === 'x' && editando === it.id) return editorExtra(it);
+  if (it.tipo === 'p' && editandoPlano === it.id) return editorPlano(it);
   const idc = (it.tipo === 'p' ? 'c-' : 'x-') + it.id;
   const marca = it.tipo === 'p' ? `data-compra="${it.id}"` : `data-extra="${it.id}"`;
-  const sub = it.tipo === 'x' ? (it.por ? `<small>incluído por ${esc(it.por.split('@')[0])}</small>` : '') : (it.obs ? `<small>${esc(it.obs)}</small>` : '');
-  return `<li class="ci-row${chegou.has(it.id) ? ' chegou' : ''}" data-item="${it.tipo}:${it.id}" data-ordem="${it.ordem}"><label class="ci" for="${idc}"><input type="checkbox" id="${idc}" ${marca}${it.marcado ? ' checked' : ''}><span class="ci-box" aria-hidden="true">${ICON.check}</span><span class="ci-t"><span class="ci-n">${esc(it.nome)}</span>${it.qtd ? `<span class="ci-q">${esc(it.qtd)}</span>` : ''}${sub}</span></label>${it.tipo === 'x' ? `<button type="button" class="ico" id="ed-${it.id}" data-editar-extra="${it.id}" aria-label="Editar ${esc(it.nome)}">${ICON.lapis}</button>` : ''}<button type="button" class="ico arrasto" aria-label="Arrastar ${esc(it.nome)} para outra posição ou categoria">${ICON.arrastar}</button></li>`;
+  const sub = it.tipo === 'x' ? (it.por ? `<small>incluído por ${esc(it.por.split('@')[0])}</small>` : '') : subPlano(it);
+  return `<li class="ci-row${chegou.has(it.id) ? ' chegou' : ''}" data-item="${it.tipo}:${it.id}" data-ordem="${it.ordem}"><label class="ci" for="${idc}"><input type="checkbox" id="${idc}" ${marca}${it.marcado ? ' checked' : ''}><span class="ci-box" aria-hidden="true">${ICON.check}</span><span class="ci-t"><span class="ci-n">${esc(it.nome)}</span>${it.qtd ? `<span class="ci-q${it.ajustada ? ' ajustada' : ''}">${esc(it.qtd)}</span>` : ''}${sub}</span></label>${it.tipo === 'x' ? `<button type="button" class="ico" id="ed-${it.id}" data-editar-extra="${it.id}" aria-label="Editar ${esc(it.nome)}">${ICON.lapis}</button>` : lapisPlano(it)}<button type="button" class="ico arrasto" aria-label="Arrastar ${esc(it.nome)} para outra posição ou categoria">${ICON.arrastar}</button></li>`;
 }
 function renderComprasCasa() {
   if (arraste) { renderPendente = true; return; }
@@ -1028,6 +1070,8 @@ function renderComprasCasa() {
   const nomeNovo = ($('#extra-nome') || {}).value || '', qtdNova = ($('#extra-qtd') || {}).value || '';
   if (editando && $('#ed-nome')) rascunhoEdicao = { id: editando, nome: $('#ed-nome').value, qtd: $('#ed-qtd').value, cat: $('#ed-cat').value };
   if (editando && !s.extras.some(x => x.id === editando)) { editando = null; rascunhoEdicao = null; }
+  if (editandoPlano && $('#ed-qtd-plano')) rascunhoPlano = { id: editandoPlano, qtd: $('#ed-qtd-plano').value };
+  if (editandoPlano && (s.removidos[editandoPlano] || !ITENS_PLANO.some(i => i.id === editandoPlano))) { editandoPlano = null; rascunhoPlano = null; }
   const todos = itensDaCasa();
   const total = todos.length, feitos = todos.filter(i => i.marcado).length;
   const pct = total ? Math.round(feitos / total * 100) : 0;
@@ -1038,7 +1082,7 @@ function renderComprasCasa() {
   CATS.forEach(c => porCat[c.id].sort((a, b) => a.ordem - b.ordem));
   const algumComprado = todos.some(i => i.marcado);
   const ocultos = ITENS_PLANO.filter(i => s.removidos[i.id]).length;
-  const notaOcultos = ocultos ? `<p class="cnota">${ocultos === 1 ? '1 item do plano já comprado saiu' : ocultos + ' itens do plano já comprados saíram'} da lista. Em “Nova semana”, o plano volta inteiro.</p>` : '';
+  const notaOcultos = ocultos ? `<p class="cnota">${ocultos === 1 ? '1 item do cardápio saiu' : ocultos + ' itens do cardápio saíram'} da lista. Em “Nova semana”, o plano volta inteiro, com as quantidades do cardápio.</p>` : '';
   const syncTxt = s.erro === 'permission-denied' ? 'Este e-mail ainda não está liberado na lista da casa.'
     : s.erro ? 'Não deu para salvar agora. Tente de novo.'
     : s.sync === 'ok' ? 'Lista da casa sincronizada' : s.sync === 'pendente' ? 'Salvando…'
@@ -1049,7 +1093,7 @@ function renderComprasCasa() {
     return `<section class="card cgrupo${its.length ? '' : ' cat-vazia'}" data-cat-sec="${c.id}"><h3 class="h3">${esc(c.nome)}</h3>${nota && its.length ? `<p class="cnota">${esc(nota)}</p>` : ''}<ul class="clist" data-cat="${c.id}">${its.map(linhaItem).join('')}</ul></section>`;
   }).join('');
   const html = `${modo === 'casa' ? bannerInstalar() : ''}<section class="block"><p class="eyebrow">Lista da casa</p><h2 class="h2">Compras da semana</h2>
-      <p class="lead">O que alguém marcar ou incluir aparece na hora para todo mundo. Toque no lápis para editar um item incluído e arraste pelos pontinhos para mudar a ordem ou a categoria.</p>
+      <p class="lead">O que alguém marcar, incluir ou ajustar aparece na hora para todo mundo. Toque no lápis para editar um item (nos do cardápio, a quantidade) e arraste pelos pontinhos para mudar a ordem ou a categoria.</p>
       <div class="cbar"><div class="line" aria-hidden="true"><span style="width:${pct}%"></span></div><span class="cbar-t"><b>${feitos}</b> de ${total} na sacola</span></div>
       <div class="btns"><button type="button" class="btn" id="btn-copiar">Copiar o que falta</button>${algumComprado ? `<button type="button" class="btn ghost" id="btn-comprados">Apagar os já comprados</button>` : ''}<button type="button" class="btn ghost" id="btn-limpar">Nova semana</button></div>${notaOcultos}
       <textarea id="copia-txt" class="copia" readonly hidden aria-label="Lista de compras para copiar"></textarea>
@@ -1165,12 +1209,14 @@ document.addEventListener('pointercancel', soltar);
 function renderCompras() {
   if (listaDaCasa()) { renderComprasCasa(); return; }
   const marc = (store.get('compras') || {}).marcados || {};
+  if (editandoPlano && $('#ed-qtd-plano')) rascunhoPlano = { id: editandoPlano, qtd: $('#ed-qtd-plano').value };
+  const aj = qtdAjustadas();
   const todos = PLAN.compras.flatMap(g => g.itens);
   const feitos = todos.filter(i => marc[i.id]).length;
   const pct = Math.round(feitos / todos.length * 100);
-  const grupos = PLAN.compras.map(g => `<section class="card cgrupo"><h3 class="h3">${esc(g.grupo)}</h3>${g.nota ? `<p class="cnota">${esc(g.nota)}</p>` : ''}<ul class="clist">${g.itens.map(i => `<li><label class="ci" for="c-${i.id}"><input type="checkbox" id="c-${i.id}" data-compra="${i.id}"${marc[i.id] ? ' checked' : ''}><span class="ci-box" aria-hidden="true">${ICON.check}</span><span class="ci-t"><span class="ci-n">${esc(i.nome)}</span>${i.qtd ? `<span class="ci-q">${esc(i.qtd)}</span>` : ''}${i.obs ? `<small>${esc(i.obs)}</small>` : ''}</span></label></li>`).join('')}</ul></section>`).join('');
+  const grupos = PLAN.compras.map(g => `<section class="card cgrupo"><h3 class="h3">${esc(g.grupo)}</h3>${g.nota ? `<p class="cnota">${esc(g.nota)}</p>` : ''}<ul class="clist">${g.itens.map(i => linhaPlanoLivre(i, marc, aj)).join('')}</ul></section>`).join('');
   const html = `<section class="block"><p class="eyebrow">Segunda a sábado</p><h2 class="h2">Compras da semana</h2>
-      <p class="lead">Tudo de segunda a sábado: as 6 marmitas, 6 sopas, 6 cafés da manhã, 12 lanches e as saladas. O domingo livre não entra.${PWA ? '' : ' A lista compartilhada com a casa fica no app do iPhone.'}</p>
+      <p class="lead">Tudo de segunda a sábado: as 6 marmitas, 6 sopas, 6 cafés da manhã, 12 lanches e as saladas. O domingo livre não entra. Já tem algo em casa? Toque no lápis e ajuste a quantidade.${PWA ? '' : ' A lista compartilhada com a casa fica no app do iPhone.'}</p>
       <div class="cbar"><div class="line" aria-hidden="true"><span style="width:${pct}%"></span></div><span class="cbar-t"><b>${feitos}</b> de ${todos.length} na sacola</span></div>
       <div class="btns"><button type="button" class="btn" id="btn-copiar">Copiar o que falta</button><button type="button" class="btn ghost" id="btn-limpar">Desmarcar tudo</button></div>
       <textarea id="copia-txt" class="copia" readonly hidden aria-label="Lista de compras para copiar"></textarea></section>
@@ -1192,7 +1238,8 @@ function textoFalta() {
     const its = g.itens.filter(i => !marc[i.id]);
     if (!its.length) return;
     linhas.push('', g.grupo.replace(/\s*\(.*\)$/, ''));
-    its.forEach(i => linhas.push(`- ${i.nome}${i.qtd ? ': ' + i.qtd : ''}`));
+    const aj = qtdAjustadas();
+    its.forEach(i => { const q = aj[i.id] || i.qtd; linhas.push(`- ${i.nome}${q ? ': ' + q : ''}`); });
   });
   return linhas.join('\n');
 }
@@ -1215,7 +1262,7 @@ function limpar(btn) {
   }
   clearTimeout(limparTimer);
   if (listaDaCasa()) { casa.novaSemana(); toast('Nova semana: o plano voltou inteiro'); }
-  else { store.set('compras', { marcados: {} }); renderCompras(); toast('Lista desmarcada'); }
+  else { store.set('compras', Object.assign({}, store.get('compras') || {}, { marcados: {} })); renderCompras(); toast('Lista desmarcada'); }
 }
 function apagarComprados(btn) {
   if (!btn.classList.contains('armado')) {
@@ -1412,12 +1459,30 @@ document.addEventListener('click', e => {
     clearTimeout(apagarTimer); apagarArmado = null;
     savePeso(s => { s.registros = (Array.isArray(s.registros) ? s.registros : []).filter(x => x && x.d !== d); });
     toast('Registro apagado');
+  } else if (t.matches('[data-editar-plano]')) {
+    editandoPlano = t.dataset.editarPlano; rascunhoPlano = null; planoArmado = null;
+    editando = null; rascunhoEdicao = null; extraArmado = null;
+    renderCompras();
+    const n = $('#ed-qtd-plano'); if (n) { n.focus(); try { n.select(); } catch (err) { /* ok */ } }
+  } else if (t.matches('[data-tirar-plano]')) {
+    const id = t.dataset.tirarPlano;
+    if (planoArmado !== id) {
+      planoArmado = id; clearTimeout(planoTimer);
+      planoTimer = setTimeout(() => { planoArmado = null; renderCompras(); }, 4000);
+      renderCompras();
+      return;
+    }
+    clearTimeout(planoTimer); planoArmado = null; editandoPlano = null; rascunhoPlano = null;
+    casa.tirarPlano(id);
+    toast('Saiu da lista até a nova semana');
   } else if (t.matches('[data-editar-extra]')) {
     editando = t.dataset.editarExtra; rascunhoEdicao = null; extraArmado = null;
+    editandoPlano = null; rascunhoPlano = null; planoArmado = null;
     renderCompras();
     const n = $('#ed-nome'); if (n) { n.focus(); try { n.setSelectionRange(n.value.length, n.value.length); } catch (err) { /* ok */ } }
   } else if (t.id === 'ed-cancelar') {
     editando = null; rascunhoEdicao = null; extraArmado = null;
+    editandoPlano = null; rascunhoPlano = null; planoArmado = null;
     renderCompras();
   } else if (t.matches('[data-apagar-extra]')) {
     const id = t.dataset.apagarExtra;
@@ -1453,7 +1518,7 @@ document.addEventListener('change', e => {
   const cur = store.get('compras') || {};
   const marcados = Object.assign({}, cur.marcados || {});
   if (t.checked) marcados[t.dataset.compra] = true; else delete marcados[t.dataset.compra];
-  store.set('compras', { marcados });
+  store.set('compras', Object.assign({}, cur, { marcados }));
   renderCompras();
 });
 
@@ -1480,6 +1545,24 @@ document.addEventListener('submit', e => {
     setTimeout(() => { recentes.delete(novoId); piscar(novoId); renderCompras(); }, 5000);
     renderCompras();
     const n = $('#extra-nome'); if (n) n.focus();
+    return;
+  }
+  if (f.id === 'form-plano') {
+    e.preventDefault();
+    const id = f.dataset.id;
+    const item = ITENS_PLANO.find(i => i.id === id);
+    const qtd = $('#ed-qtd-plano').value.trim().slice(0, 30);
+    const valor = qtd && (!item || qtd !== (item.qtd || '')) ? qtd : null;
+    if (listaDaCasa()) casa.editarPlano(id, valor);
+    else {
+      const cur = store.get('compras') || {};
+      const aj = Object.assign({}, cur.qtd || {});
+      if (valor) aj[id] = valor; else delete aj[id];
+      store.set('compras', Object.assign({}, cur, { qtd: aj }));
+    }
+    editandoPlano = null; rascunhoPlano = null; planoArmado = null;
+    renderCompras();
+    toast(valor ? 'Quantidade atualizada' : 'Voltou à quantidade do cardápio');
     return;
   }
   if (f.id === 'form-editar') {
